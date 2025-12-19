@@ -1,0 +1,3 @@
+rootProject.name = 'cics-java-liberty-kafka'
+include(':cics-java-liberty-kafka-app')
+include(':cics-java-liberty-kafka-bundle')

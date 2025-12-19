@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  
+  <groupId>com.ibm.cicsdev</groupId>
+  <artifactId>cics-java-liberty-kafka</artifactId>
+  <version>1.0.0</version>
+  <packaging>pom</packaging>
+
+  <name>CICS Kafka Jakarta EE</name>
+    <description>
+	Sample CICS application demonstrating Kafka consumption using
+	Jakarta EE, MicroProfile, and IBM Liberty, integrated with CICS.
+	</description>
+
+    <properties>
+        <java.version>17</java.version>
+        <jakarta.version>10.0.0</jakarta.version>
+        <cics.jvmserver>DFHWLP</cics.jvmserver>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.source>${java.version}</maven.compiler.source>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.ibm.cics</groupId>
+                <artifactId>com.ibm.cics.ts.bom</artifactId>
+                <version>6.3-20250905155520</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    
+    <modules>
+        <module>cics-java-liberty-kafka-app</module>
+        <module>cics-java-liberty-kafka-bundle</module>
+    </modules>
+</project>

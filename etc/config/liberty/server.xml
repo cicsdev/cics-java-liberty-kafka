@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<server description="CICS Liberty sample configuration">
+    <!-- Enable features -->
+    <featureManager>
+        <feature>appSecurity-5.0</feature>
+        <feature>cicsts:core-1.0</feature>
+        <feature>microprofile-7.0</feature>
+        <feature>transportSecurity-1.0</feature>
+        <feature>cicsts:security-1.0</feature>
+        <feature>cdi-4.0</feature>
+    	<feature>restfulWS-3.1</feature>
+    	<feature>concurrent-3.0</feature>
+    </featureManager>
+    
+    <!-- Default HTTP End Point -->
+    <httpEndpoint host="*" httpPort="12372" httpsPort="12373" id="defaultHttpEndpoint">
+        <!-- Increase server security with the OWASP recommended HTTP headers.
+             These should be configured further to meet the security needs of
+             your web applications, especially the Content-Security-Policty
+             (CSP) header. -->
+        <headers>
+            <setIfMissing>Content-Security-Policy</setIfMissing>
+            <setIfMissing>Referrer-Policy: strict-origin-when-cross-origin</setIfMissing>
+            <setIfMissing>X-Content-Type-Options: nosniff</setIfMissing>
+            <setIfMissing>X-Frame-Options: DENY</setIfMissing>
+        </headers>
+    </httpEndpoint>
+    
+    <!-- Provide more secure cookie defaults -->
+    <httpSession cookieHttpOnly="true" cookieSecure="true"/>
+    
+    <!-- Provide more secure application defaults -->
+    <webAppSecurity httpOnlyCookies="true" ssoRequiresSSL="true"/>
+    
+    <!-- Add Strict Transport Security (HSTS) -->
+    <webContainer addStrictTransportSecurityHeader="max-age=31536000"/>
+    
+    <!-- Add a more secure session timeout (default is 120 mins) -->
+    <ltpa expiration="60m"/>
+    
+    <config monitorInterval="5s" updateTrigger="polled"/>
+    
+    <!-- The application start timeout specifies the maximum
+         amount of time the server waits for applications
+         to start before the server becomes available.
+         If there are lots of applications installed and startup
+         takes too long you may need to increase this value.
+    -->
+    <applicationManager startTimeout="60s"/>
+    
+    <applicationMonitor dropins="dropins" dropinsEnabled="false" pollingRate="5s" updateTrigger="disabled"/>
+        
+    <application location="${server.config.dir}/apps/cics-java-liberty-kafka.war" type="war">
+        <classloader apiTypeVisibility="spec, ibm-api, stable, third-party"/>
+        <application-bnd>
+            <security-role name="cics-user">
+                <special-subject type="ALL_AUTHENTICATED_USERS"/>
+            </security-role>
+        </application-bnd>
+    </application>
+    
+    <!--  Enable Java Util Logging in Liberty trace.log for this App -->
+    <logging traceSpecification="com.example.kafka=all"/>
+    
+    
+    <!-- Option B: Obtain AES key from RACF key ring at runtime --> 
+    <!--  <zosPasswordEncryptionKey keyring="safkeyring:///Your.Keyring" label="Liberty" type="JCERACFKS"/>  -->
+        
+    <!-- Option B: Credentials alias (AES-protected) --> 
+    <!-- <authData id="cicsSAF" user="serviceID" password="{aes}ARI673meZr9vy...." /> -->    
+    
+    <keyStore fileBased="false" id="defaultKeyStore" location="safkeyring://USERID/Key.ring" password="password" readOnly="true" type="JCERACFKS"/>
+    <ssl clientAuthenticationSupported="true" id="defaultSSLConfig" keyStoreRef="defaultKeyStore" sslProtocol="TLSv1.3,TLSv1.2"/>
+        
+    <cdi enableImplicitBeanArchives="false"/>
+    <include id="cics_auto" location="${server.config.dir}/installedApps.xml" onConflict="IGNORE"/>
+               
+    <safRegistry enableFailover="false" id="saf"/>
+    <executor coreThreads="8" id="allowCICSconfigure" maxThreads="50"/>
+</server>

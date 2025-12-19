@@ -1,0 +1,50 @@
+name: Build
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+
+  build-mvnw:
+    name: Build Maven Wrapper
+
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+         jdk: [8, 11, 17]
+         
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK ${{ matrix.jdk }}
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ matrix.jdk }}
+          distribution: "semeru"
+          cache: maven
+      - name: Build with Maven
+        run: ./mvnw --batch-mode --update-snapshots --file pom.xml -Djava.version=${{ matrix.jdk }} package 
+
+  build-gradlew:
+    name: Build Gradle wrapper
+    
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+         jdk: [17,21]
+         
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up JDK ${{ matrix.jdk }}
+      uses: actions/setup-java@v4
+      with:
+        java-version: ${{ matrix.jdk }}
+        distribution: 'semeru'
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+    - name: Build with Gradle
+      run: ./gradlew build bootWar -Pjava_version=${{ matrix.jdk }}
