@@ -171,7 +171,7 @@ public class KafkaConsumerService
 
 		if (subject == null) 
 		{
-			LOG.info("Skipping message for inactive topic orders");
+			LOG.info("Skipping message for inactive topic "+topic);
 			LOG.warning(() -> "No Subject for topic '" + topic + "' — skipping message.");
 			return;
 		}

@@ -2,24 +2,24 @@ Sample - cics-java-liberty-kafka (Kafka on Liberty with Jakarta EE)
 
 ## What this sample does
 
-This sample demonstrates how to integrate **Apache Kafka** with **Jakarta EE** applications running on **Open Liberty**. It focuses on explicit control, minimal dependencies, and clear interaction with Liberty container services.
+This sample demonstrates how to integrate **Apache Kafka** with **Jakarta EE** applications running on **WebSphere Liberty**. It focuses on explicit control, minimal dependencies, and clear interaction with Liberty container services.
 
 Unlike framework-heavy approaches, the sample is intentionally transparent: threading, security identity, Kafka polling, and logging behaviour are all visible and controllable by the application.
 
 The sample follows **CICSDev best practices** and is intended both as a runnable example and as an educational reference.
 
-cics-java-liberty-kafka - Top-level project.
-cics-java-liberty-kafka-app - Main application project.
-cics-java-liberty-kafka-bundle - CICS bundle plug-in based project, contains application and KAFK transaction bundle-parts. Use with Gradle and Maven builds.
-etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle - CICS Explorer based CICS bundle project, contains application. Use with CICS Explorer 'Export to zFS' deployment capability.
-etc/config/liberty/server.xml - A template server.xml demonstrating the minimum configuration required to run the sample.
+- [cics-java-liberty-kafka](./cics-java-liberty-kafka) - Top-level project.
+- [cics-java-liberty-kafka-app](./cics-java-liberty-kafka-app) - Main application project.
+- [cics-java-liberty-kafka-bundle](./cics-java-liberty-kafka-bundle) - CICS bundle plug-in based project, contains application and KAFK transaction bundle-parts. Use with Gradle and Maven builds.
+- [etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle](./etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle) - CICS Explorer based CICS bundle project, contains application and KAFK transaction bundle-parts. Use with CICS Explorer 'Export to zFS' deployment capability.
+- [etc/config/liberty/server.xml](./etc/config/liberty/server.xml) - A template `server.xml` demonstrating the minimum configuration required to run the sample.
 
 ---
 
 ## Prerequisites
 
 * Java 17 or later on the workstation
-* Open Liberty
+* WebSphere Liberty
 * Apache Kafka broker (local or remote)
 * One of the following on your workstation:
   Eclipse with the IBM CICS SDK for Java EE, Jakarta EE and Liberty
@@ -274,7 +274,7 @@ All such usage is documented inline, including limitations and trade-offs.
 
 ## Security Model Demonstrated
 
-This sample demonstrates explicit, application-managed security identity propagation for Kafka consumer threads running in Open Liberty.
+This sample demonstrates explicit, application-managed security identity propagation for Kafka consumer threads running in WebSphere Liberty.
 Kafka consumers execute on application-managed background threads, so security identity must be established explicitly rather than being inherited from a container-managed request thread.
 
 Two supported approaches are documented:
