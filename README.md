@@ -8,7 +8,7 @@ Unlike framework-heavy approaches, the sample is intentionally transparent: thre
 
 The sample follows **CICSDev best practices** and is intended both as a runnable example and as an educational reference.
 
-- [cics-java-liberty-kafka](./cics-java-liberty-kafka) - Top-level project.
+- [cics-java-liberty-kafka](/) - Top-level project.
 - [cics-java-liberty-kafka-app](./cics-java-liberty-kafka-app) - Main application project.
 - [cics-java-liberty-kafka-bundle](./cics-java-liberty-kafka-bundle) - CICS bundle plug-in based project, contains application and KAFK transaction bundle-parts. Use with Gradle and Maven builds.
 - [etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle](./etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle) - CICS Explorer based CICS bundle project, contains application and KAFK transaction bundle-parts. Use with CICS Explorer 'Export to zFS' deployment capability.
