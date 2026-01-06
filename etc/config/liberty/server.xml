@@ -64,12 +64,12 @@
     
     
     <!-- Option B: Obtain AES key from RACF key ring at runtime --> 
-    <!--  <zosPasswordEncryptionKey keyring="safkeyring:///Your.Keyring" label="Liberty" type="JCERACFKS"/>  -->
+    <!--  <zosPasswordEncryptionKey keyring="safkeyring:///YOUR.KEYRING" label="Liberty" type="JCERACFKS"/>  -->
         
     <!-- Option B: Credentials alias (AES-protected) --> 
-    <!-- <authData id="cicsSAF" user="serviceID" password="{aes}ARI673meZr9vy...." /> -->    
+    <!-- <authData id="cicsSAF" user="<user_id>" password="{aes}ARI673meZr9vy...." /> -->    
     
-    <keyStore fileBased="false" id="defaultKeyStore" location="safkeyring://USERID/Key.ring" password="password" readOnly="true" type="JCERACFKS"/>
+    <keyStore fileBased="false" id="defaultKeyStore" location="safkeyring:///YOUR.KEYRING" password="password" readOnly="true" type="JCERACFKS"/>
     <ssl clientAuthenticationSupported="true" id="defaultSSLConfig" keyStoreRef="defaultKeyStore" sslProtocol="TLSv1.3,TLSv1.2"/>
         
     <cdi enableImplicitBeanArchives="false"/>

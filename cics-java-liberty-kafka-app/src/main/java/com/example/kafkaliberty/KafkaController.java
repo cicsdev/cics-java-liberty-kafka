@@ -29,11 +29,12 @@ import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+
 @ApplicationScoped
 @Path("/control")
-@DeclareRoles({"cics-user"})
+@DeclareRoles({ "cics-user" })
 @RolesAllowed("cics-user")
-public class KafkaController 
+public class KafkaController
 {
     private static final Logger LOG = Logger.getLogger(KafkaController.class.getName());
 
@@ -41,11 +42,12 @@ public class KafkaController
     private final Map<String, Subject> activeTopics = new ConcurrentHashMap<>();
 
     @Inject
-	private KafkaConsumerService kafkaConsumer;
-    
+    private KafkaConsumerService kafkaConsumer;
+
     // Present in app but inactive; use in start() to enable programmatic login
-    //@Autowired(required = false)
-    //private LoginManager loginManager;
+    // @Autowired(required = false)
+    // private LoginManager loginManager;
+
 
     @GET
     @Path("/start")
@@ -53,36 +55,36 @@ public class KafkaController
     /**
      * Start consumption for a single topic under the caller's Liberty Subject (JWT/OIDC/Basic).
      */
-    public Response start(@QueryParam("topic") String topic) 
+    public Response start(@QueryParam("topic") String topic)
     {
-        if (topic == null || topic.isBlank()) 
+        if (topic == null || topic.isBlank())
         {
             return Response.status(400).entity("ERROR: missing topic").build();
         }
 
         // Capture the caller’s Liberty Subject
         Subject subject;
-        try 
+        try
         {
             subject = WSSubject.getCallerSubject();
-            LOG.info(() ->("DEBUG: Subject is: " + subject));
-        } 
-        catch (WSSecurityException e) 
+            LOG.info(() -> ("DEBUG: Subject is: " + subject));
+        }
+        catch (WSSecurityException e)
         {
             return Response.status(401).entity("ERROR: cannot obtain caller subject: " + e).build();
         }
 
-        if (subject == null) 
+        if (subject == null)
         {
             return Response.status(401).entity("ERROR: unauthenticated request").build();
         }
 
         // Save caller subject
         activeTopics.put(topic, subject);
-        
+
         kafkaConsumer.startConsuming(topic, subject);
 
-        LOG.info(()-> ("Started listener for topic " + topic));
+        LOG.info(() -> ("Started listener for topic " + topic));
         return Response.ok("Started listener for topic=" + topic).build();
     }
 
@@ -90,9 +92,9 @@ public class KafkaController
     @GET
     @Path("/stop")
     @Produces(MediaType.TEXT_PLAIN)
-    public Response stop(@QueryParam("topic") String topic) 
+    public Response stop(@QueryParam("topic") String topic)
     {
-        if (topic == null || topic.isBlank()) 
+        if (topic == null || topic.isBlank())
         {
             return Response.status(400).entity("ERROR: missing topic").build();
         }
@@ -100,12 +102,12 @@ public class KafkaController
         activeTopics.remove(topic);
         kafkaConsumer.stop(topic);
 
-        LOG.info(()->("Stopped listener for topic " + topic));
+        LOG.info(() -> ("Stopped listener for topic " + topic));
         return Response.ok("Stopped listener for topic=" + topic).build();
     }
 
 
-    public Map<String, Subject> getActiveTopics() 
+    public Map<String, Subject> getActiveTopics()
     {
         return activeTopics;
     }

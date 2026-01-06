@@ -1,97 +1,110 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <parent>
-    <groupId>com.ibm.cicsdev</groupId>
-    <artifactId>cics-java-liberty-kafka</artifactId>
-    <version>1.0.0</version>
-  </parent>
+    <!-- ================================================================ -->
+    <!-- Parent Project                                                   -->
+    <!-- ================================================================ -->
+    <parent>
+        <groupId>com.ibm.cicsdev</groupId>
+        <artifactId>cics-java-liberty-kafka</artifactId>
+        <version>1.0.0</version>
+    </parent>
 
-  <artifactId>cics-java-liberty-kafka-app</artifactId>
-  <packaging>war</packaging>
-  <name>CICS Kafka Jakarta EE - Application</name>
+    <!-- ================================================================ -->
+    <!-- Project Coordinates                                              -->
+    <!-- ================================================================ -->
+    <artifactId>cics-java-liberty-kafka-app</artifactId>
+    <packaging>war</packaging>
+    <name>CICS Kafka Jakarta EE - Application</name>
 
-  <dependencies>
-  
-    <!-- JCICS APIs -->
-    <dependency>
-      <groupId>com.ibm.cics</groupId>
-      <artifactId>com.ibm.cics.server</artifactId>
-    </dependency>
-    
-    <dependency>
-	  <groupId>org.eclipse.microprofile.reactive.messaging</groupId>
-	  <artifactId>microprofile-reactive-messaging-api</artifactId>
-	  <version>3.0</version>
-	  <scope>provided</scope>
-    </dependency>
-    
-	<!--  Jakarta EE Core APIs  -->
-	<dependency>
-	  <groupId>jakarta.platform</groupId>
-	  <artifactId>jakarta.jakartaee-api</artifactId>
-	  <version>${jakarta.version}</version>
-	  <scope>provided</scope>
-	</dependency>
-	
-	<!-- Eclpse MicroProfile -->
-	<dependency>
-	  <groupId>org.eclipse.microprofile</groupId>
-	  <artifactId>microprofile</artifactId>
-	  <version>7.0</version>
-	  <type>pom</type>
-	  <scope>provided</scope>
-	</dependency>
-	
-	<!--  ✅ Optional: Kafka client (if needed for manual control)  -->
-	<dependency>
-	  <groupId>org.apache.kafka</groupId>
-	  <artifactId>kafka-clients</artifactId>
-	  <version>4.0.1</version>
-	</dependency>
-	  
-	<dependency>
-	  <groupId>org.slf4j</groupId>
-	  <artifactId>slf4j-jdk14</artifactId>
-	  <version>1.7.25</version>
-	</dependency>
-	
-	<!--  Liberty Security API (for WSSubject, WSSecurityException, JAAS)  -->
-	<dependency>
-	  <groupId>net.wasdev.maven.tools.targets</groupId>
-	  <artifactId>liberty-apis</artifactId>
-	  <version>25.0.0.9</version>
-	  <type>pom</type>
-	  <scope>provided</scope>
-	</dependency>
-	
-  </dependencies>
+    <!-- ================================================================ -->
+    <!-- Dependencies                                                     -->
+    <!-- ================================================================ -->
+    <dependencies>
+        <!-- JCICS APIs -->
+        <dependency>
+            <groupId>com.ibm.cics</groupId>
+            <artifactId>com.ibm.cics.server</artifactId>
+        </dependency>
 
-  <build>
-    <plugins>
-    
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>3.12.1</version>
-        <configuration>
-        </configuration>
-      </plugin>
-      
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-war-plugin</artifactId>
-        <version>3.4.0</version>
-        <configuration>
-          <archive>
-            <addMavenDescriptor>false</addMavenDescriptor>
-          </archive>
-        </configuration>
-      </plugin>
-      
-    </plugins>
-  </build>
+        <!-- MicroProfile Reactive Messaging -->
+        <dependency>
+            <groupId>org.eclipse.microprofile.reactive.messaging</groupId>
+            <artifactId>microprofile-reactive-messaging-api</artifactId>
+            <version>${microprofile.reactive.messaging.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Jakarta EE Core APIs -->
+        <dependency>
+            <groupId>jakarta.platform</groupId>
+            <artifactId>jakarta.jakartaee-api</artifactId>
+            <version>${jakarta.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Eclipse MicroProfile -->
+        <dependency>
+            <groupId>org.eclipse.microprofile</groupId>
+            <artifactId>microprofile</artifactId>
+            <version>${microprofile.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- Apache Kafka Client -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>${kafka.version}</version>
+        </dependency>
+
+        <!-- SLF4J Logging Implementation -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Liberty Security APIs (WSSubject, JAAS, AuthData) -->
+        <dependency>
+            <groupId>net.wasdev.maven.tools.targets</groupId>
+            <artifactId>liberty-apis</artifactId>
+            <version>${liberty.apis.version}</version>
+            <type>pom</type>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <!-- ================================================================ -->
+    <!-- Build Configuration                                              -->
+    <!-- ================================================================ -->
+    <build>
+        <plugins>
+            <!-- Maven Compiler Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.12.1</version>
+                <configuration>
+                </configuration>
+            </plugin>
+
+            <!-- Maven WAR Plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <archive>
+                        <addMavenDescriptor>false</addMavenDescriptor>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>

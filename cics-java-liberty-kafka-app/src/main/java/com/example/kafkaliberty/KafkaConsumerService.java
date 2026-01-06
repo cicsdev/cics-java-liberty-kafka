@@ -30,206 +30,208 @@ import com.ibm.websphere.security.auth.WSSubject;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
+
 @ApplicationScoped
 public class KafkaConsumerService
 {
-	@Inject
-	KafkaConfig config;
+    @Inject
+    KafkaConfig config;
 
-	@Inject
-	KafkaController control;
+    @Inject
+    KafkaController control;
 
-	@Inject
-	KafkaMessageProcessor processor;
+    @Inject
+    KafkaMessageProcessor processor;
 
-	private static final Logger LOG = Logger.getLogger(KafkaConsumerService.class.getName());
+    private static final Logger LOG = Logger.getLogger(KafkaConsumerService.class.getName());
 
-	// Guard: one-time RunAs initialisation per consumer thread
-	private final ThreadLocal<Boolean> runAsInitialized = ThreadLocal.withInitial(() -> false);
-	private final ThreadLocal<Subject> previousRunAs = new ThreadLocal<>();
+    // Guard: one-time RunAs initialisation per consumer thread
+    private final ThreadLocal<Boolean> runAsInitialized = ThreadLocal.withInitial(() -> false);
+    private final ThreadLocal<Subject> previousRunAs = new ThreadLocal<>();
 
-	/** Topic → Running Flag */
-	private final Map<String, AtomicBoolean> runningTopics = new ConcurrentHashMap<>();
+    /** Topic → Running Flag */
+    private final Map<String, AtomicBoolean> runningTopics = new ConcurrentHashMap<>();
 
-	/** Topic → KafkaConsumer */
-	private final Map<String, KafkaConsumer<String, String>> consumerMap = new ConcurrentHashMap<>();
+    /** Topic → KafkaConsumer */
+    private final Map<String, KafkaConsumer<String, String>> consumerMap = new ConcurrentHashMap<>();
 
-	
-	public void startConsuming(String topic, Subject subject) 
-	{
-		// Atomic check to prevent duplicate listeners
-		AtomicBoolean flag = new AtomicBoolean(true);
-		AtomicBoolean existing = runningTopics.putIfAbsent(topic, flag);
 
-		if (existing != null) 
-		{
-			LOG.info("Consumer already running for topic: " + topic);
-			return;
-		}
+    public void startConsuming(String topic, Subject subject)
+    {
+        // Atomic check to prevent duplicate listeners
+        AtomicBoolean flag = new AtomicBoolean(true);
+        AtomicBoolean existing = runningTopics.putIfAbsent(topic, flag);
 
-		Thread t = new Thread(() -> {
-			KafkaConsumer<String, String> consumer = null;
-			try 
-			{
-				Properties props = config.buildKafkaPropertiesForTopic(topic);
+        if (existing != null)
+        {
+            LOG.info("Consumer already running for topic: " + topic);
+            return;
+        }
 
-				if (props.isEmpty()) 
-				{
-					LOG.warning("No Kafka properties found for topic: " + topic);
-					return;
-				}
+        Thread t = new Thread(() ->
+        {
+            KafkaConsumer<String, String> consumer = null;
+            try
+            {
+                Properties props = config.buildKafkaPropertiesForTopic(topic);
 
-				LOG.info("Kafka props for " + topic + ": " + props);
+                if (props.isEmpty())
+                {
+                    LOG.warning("No Kafka properties found for topic: " + topic);
+                    return;
+                }
 
-				consumer = new KafkaConsumer<>(props);
-				consumer.subscribe(Collections.singletonList(topic));
+                LOG.info("Kafka props for " + topic + ": " + props);
 
-				consumerMap.put(topic, consumer);
+                consumer = new KafkaConsumer<>(props);
+                consumer.subscribe(Collections.singletonList(topic));
 
-				while (runningTopics.get(topic).get()) 
-				{
-					ConsumerRecords<String, String> records = consumer.poll(java.time.Duration.ofMillis(200));
+                consumerMap.put(topic, consumer);
 
-					for (ConsumerRecord<String, String> r : records) 
-					{
-						try 
-						{
-							handleMessage(topic, r.value());
-						} 
-						catch (Exception ex) 
-						{
-							LOG.severe("Error processing message: " + ex);
-						}
-					}
-				}
-			} 
-			catch (WakeupException we) 
-			{
-				LOG.info("Consumer wakeup received for topic=" + topic);
-			} 
-			catch (Exception e) 
-			{
-				LOG.severe("Error in Kafka consumer for topic " + topic + ": " + e.getMessage());
-			} 
-			finally 
-			{
-				if (consumer != null) 
-				{
-					try 
-					{
-						consumer.close();
-					} 
-					catch (Exception ignored) 
-					{
-						// TODO: Log exception
-					}
-				}
+                while (runningTopics.get(topic).get())
+                {
+                    ConsumerRecords<String, String> records = consumer.poll(java.time.Duration.ofMillis(200));
 
-				restoreRunAsIfInitialized();
+                    for (ConsumerRecord<String, String> r : records)
+                    {
+                        try
+                        {
+                            handleMessage(topic, r.value());
+                        }
+                        catch (Exception ex)
+                        {
+                            LOG.severe("Error processing message: " + ex);
+                        }
+                    }
+                }
+            }
+            catch (WakeupException we)
+            {
+                LOG.info("Consumer wakeup received for topic=" + topic);
+            }
+            catch (Exception e)
+            {
+                LOG.severe("Error in Kafka consumer for topic " + topic + ": " + e.getMessage());
+            }
+            finally
+            {
+                if (consumer != null)
+                {
+                    try
+                    {
+                        consumer.close();
+                    }
+                    catch (Exception ignored)
+                    {
+                        // TODO: Log exception
+                    }
+                }
 
-				runningTopics.remove(topic);
-				consumerMap.remove(topic);
+                restoreRunAsIfInitialized();
 
-				LOG.info("Consumer closed for topic: " + topic);
-			}
-		});
-		t.start();
-	}
+                runningTopics.remove(topic);
+                consumerMap.remove(topic);
 
-	
-	// =====================================================================
-	// STOP CONSUMER
-	// =====================================================================
-	public void stop(String topic) 
-	{	
-		AtomicBoolean running = runningTopics.get(topic);
+                LOG.info("Consumer closed for topic: " + topic);
+            }
+        });
+        t.start();
+    }
 
-		if (running == null || !running.get()) 
-		{
-			LOG.info("Consumer not running for topic: " + topic);
-			return;
-		}
 
-		LOG.info("Stopping consumer for topic: " + topic);
+    // =====================================================================
+    // STOP CONSUMER
+    // =====================================================================
+    public void stop(String topic)
+    {
+        AtomicBoolean running = runningTopics.get(topic);
 
-		running.set(false);
+        if (running == null || !running.get())
+        {
+            LOG.info("Consumer not running for topic: " + topic);
+            return;
+        }
 
-		KafkaConsumer<String, String> consumer = consumerMap.get(topic);
-		if (consumer != null) 
-		{
-			try 
-			{
-				consumer.wakeup(); // force poll() to exit NOW
-			} 
-			catch (Exception ignored) 
-			{
-				// TODO: log exception
-			}
-		}
-	}
+        LOG.info("Stopping consumer for topic: " + topic);
 
-	
-	/**
-	 * Common handler: - Retrieves per-topic Liberty Subject - Sets RunAs once per
-	 * consumer thread - Calls async processor
-	 */
-	void handleMessage(String topic, String message) 
-	{
+        running.set(false);
 
-		Subject subject = control.getActiveTopics().get(topic);
+        KafkaConsumer<String, String> consumer = consumerMap.get(topic);
+        if (consumer != null)
+        {
+            try
+            {
+                consumer.wakeup(); // force poll() to exit NOW
+            }
+            catch (Exception ignored)
+            {
+                // TODO: log exception
+            }
+        }
+    }
 
-		if (subject == null) 
-		{
-			LOG.info("Skipping message for inactive topic "+topic);
-			LOG.warning(() -> "No Subject for topic '" + topic + "' — skipping message.");
-			return;
-		}
 
-		if (!runAsInitialized.get()) 
-		{
-			try 
-			{
-				Subject prev = WSSubject.getRunAsSubject();
-				previousRunAs.set(prev);
+    /**
+     * Common handler: - Retrieves per-topic Liberty Subject - Sets RunAs once per consumer thread - Calls async
+     * processor
+     */
+    void handleMessage(String topic, String message)
+    {
 
-				WSSubject.setRunAsSubject(subject);
-				runAsInitialized.set(true);
+        Subject subject = control.getActiveTopics().get(topic);
 
-				LOG.fine(() -> "RunAs set for topic '" + topic + "' on consumer thread.");
-			} 
-			catch (WSSecurityException e) 
-			{
-				LOG.log(Level.SEVERE, "Failed to set RunAsSubject for topic '" + topic + "': " + e.getMessage(), e);
-				return;
-			}
-		}
+        if (subject == null)
+        {
+            LOG.info("Skipping message for inactive topic " + topic);
+            LOG.warning(() -> "No Subject for topic '" + topic + "' — skipping message.");
+            return;
+        }
 
-		// Submit message to your async processor
-		processor.processAsynchronous(topic, message);
-	}
+        if (!runAsInitialized.get())
+        {
+            try
+            {
+                Subject prev = WSSubject.getRunAsSubject();
+                previousRunAs.set(prev);
 
-	
-	public void restoreRunAsIfInitialized() 
-	{
-		if (runAsInitialized.get()) 
-		{
-			try 
-			{
-				Subject prev = previousRunAs.get();
-				if (prev != null) 
-				{
-					WSSubject.setRunAsSubject(prev);
-				}
-			} 
-			catch (WSSecurityException e) 
-			{
-				LOG.log(Level.WARNING, "Failed to restore previous RunAsSubject: " + e.getMessage(), e);
-			} 
-			finally 
-			{
-				runAsInitialized.remove();
-				previousRunAs.remove();
-			}
-		}
-	}
+                WSSubject.setRunAsSubject(subject);
+                runAsInitialized.set(true);
+
+                LOG.fine(() -> "RunAs set for topic '" + topic + "' on consumer thread.");
+            }
+            catch (WSSecurityException e)
+            {
+                LOG.log(Level.SEVERE, "Failed to set RunAsSubject for topic '" + topic + "': " + e.getMessage(), e);
+                return;
+            }
+        }
+
+        // Submit message to your async processor
+        processor.processAsynchronous(topic, message);
+    }
+
+
+    public void restoreRunAsIfInitialized()
+    {
+        if (runAsInitialized.get())
+        {
+            try
+            {
+                Subject prev = previousRunAs.get();
+                if (prev != null)
+                {
+                    WSSubject.setRunAsSubject(prev);
+                }
+            }
+            catch (WSSecurityException e)
+            {
+                LOG.log(Level.WARNING, "Failed to restore previous RunAsSubject: " + e.getMessage(), e);
+            }
+            finally
+            {
+                runAsInitialized.remove();
+                previousRunAs.remove();
+            }
+        }
+    }
 }

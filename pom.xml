@@ -1,43 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  
-  <groupId>com.ibm.cicsdev</groupId>
-  <artifactId>cics-java-liberty-kafka</artifactId>
-  <version>1.0.0</version>
-  <packaging>pom</packaging>
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
 
-  <name>CICS Kafka Jakarta EE</name>
+    <!-- ================================================================ -->
+    <!-- Project Coordinates                                              -->
+    <!-- ================================================================ -->
+    <groupId>com.ibm.cicsdev</groupId>
+    <artifactId>cics-java-liberty-kafka</artifactId>
+    <version>1.0.0</version>
+    <packaging>pom</packaging>
+
+    <!-- ================================================================ -->
+    <!-- Project Information                                              -->
+    <!-- ================================================================ -->
+    <name>CICS Kafka Jakarta EE</name>
     <description>
-	Sample CICS application demonstrating Kafka consumption using
-	Jakarta EE, MicroProfile, and IBM Liberty, integrated with CICS.
-	</description>
+        Sample CICS application demonstrating Kafka consumption using
+        Jakarta EE, MicroProfile, and IBM Liberty, integrated with CICS.
+    </description>
 
+    <!-- ================================================================ -->
+    <!-- Build Properties                                                 -->
+    <!-- ================================================================ -->
     <properties>
+        <!-- Java and Encoding -->
         <java.version>17</java.version>
-        <jakarta.version>10.0.0</jakarta.version>
-        <cics.jvmserver>DFHWLP</cics.jvmserver>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <maven.compiler.source>${java.version}</maven.compiler.source>
+
+        <!-- CICS Configuration -->
+        <cics.jvmserver>DFHWLP</cics.jvmserver>
+        <cics.bom.version>6.3-20250905155520</cics.bom.version>
+
+        <!-- Framework Versions -->
+        <jakarta.version>10.0.0</jakarta.version>
+        <microprofile.version>7.0</microprofile.version>
+        <microprofile.reactive.messaging.version>3.0</microprofile.reactive.messaging.version>
+        <liberty.apis.version>25.0.0.9</liberty.apis.version>
+
+        <!-- Dependency Versions -->
+        <kafka.version>4.0.1</kafka.version>
+        <slf4j.version>1.7.25</slf4j.version>
     </properties>
 
+    <!-- ================================================================ -->
+    <!-- Dependency Management                                            -->
+    <!-- ================================================================ -->
     <dependencyManagement>
         <dependencies>
+            <!-- CICS TS Bill of Materials -->
             <dependency>
                 <groupId>com.ibm.cics</groupId>
                 <artifactId>com.ibm.cics.ts.bom</artifactId>
-                <version>6.3-20250905155520</version>
+                <version>${cics.bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
+    <!-- ================================================================ -->
+    <!-- Modules                                                          -->
+    <!-- ================================================================ -->
     <modules>
         <module>cics-java-liberty-kafka-app</module>
         <module>cics-java-liberty-kafka-bundle</module>
     </modules>
+
 </project>
