@@ -2,24 +2,24 @@ Sample - cics-java-liberty-kafka (Kafka on Liberty with Jakarta EE)
 
 ## What this sample does
 
-This sample demonstrates how to integrate **Apache Kafka** with **Jakarta EE** applications running on **Open Liberty**. It focuses on explicit control, minimal dependencies, and clear interaction with Liberty container services.
+This sample demonstrates how to integrate **Apache Kafka** with **Jakarta EE** applications running on **WebSphere Liberty**. It focuses on explicit control, minimal dependencies, and clear interaction with Liberty container services.
 
 Unlike framework-heavy approaches, the sample is intentionally transparent: threading, security identity, Kafka polling, and logging behaviour are all visible and controllable by the application.
 
 The sample follows **CICSDev best practices** and is intended both as a runnable example and as an educational reference.
 
-cics-java-liberty-kafka - Top-level project.
-cics-java-liberty-kafka-app - Main application project.
-cics-java-liberty-kafka-bundle - CICS bundle plug-in based project, contains application and KAFK transaction bundle-parts. Use with Gradle and Maven builds.
-etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle - CICS Explorer based CICS bundle project, contains application. Use with CICS Explorer 'Export to zFS' deployment capability.
-etc/config/liberty/server.xml - A template server.xml demonstrating the minimum configuration required to run the sample.
+- [cics-java-liberty-kafka](/) - Top-level project.
+- [cics-java-liberty-kafka-app](./cics-java-liberty-kafka-app) - Main application project.
+- [cics-java-liberty-kafka-bundle](./cics-java-liberty-kafka-bundle) - CICS bundle plug-in based project, contains application and KAFK transaction bundle-parts. Use with Gradle and Maven builds.
+- [etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle](./etc/eclipse_projects/com.ibm.cics.server.examples.liberty.kafka.bundle) - CICS Explorer based CICS bundle project, contains application and KAFK transaction bundle-parts. Use with CICS Explorer 'Export to zFS' deployment capability.
+- [etc/config/liberty/server.xml](./etc/config/liberty/server.xml) - A template `server.xml` demonstrating the minimum configuration required to run the sample.
 
 ---
 
 ## Prerequisites
 
 * Java 17 or later on the workstation
-* Open Liberty
+* WebSphere Liberty
 * Apache Kafka broker (local or remote)
 * One of the following on your workstation:
   Eclipse with the IBM CICS SDK for Java EE, Jakarta EE and Liberty
@@ -274,7 +274,7 @@ All such usage is documented inline, including limitations and trade-offs.
 
 ## Security Model Demonstrated
 
-This sample demonstrates explicit, application-managed security identity propagation for Kafka consumer threads running in Open Liberty.
+This sample demonstrates explicit, application-managed security identity propagation for Kafka consumer threads running in WebSphere Liberty.
 Kafka consumers execute on application-managed background threads, so security identity must be established explicitly rather than being inherited from a container-managed request thread.
 
 Two supported approaches are documented:
@@ -339,7 +339,7 @@ Option B only: authData-based Kafka credentials
 
   <!-- Obtain AES key from RACF key ring at runtime -->
   <zosPasswordEncryptionKey
-      keyring="safkeyring:///Your.keyring"
+      keyring="safkeyring:///YOUR.KEYRING"
       type="JCERACFKS"
       label="Liberty"/>
       
@@ -348,11 +348,11 @@ Option B only: authData-based Kafka credentials
   <keyStore id="defaultKeyStore"
             fileBased="false"
             type="JCERACFKS"
-            location="safkeyring:///Ivan.Hargreaves"
+            location="safkeyring:///YOUR.KEYRING"
             password="password"/>
 
   <!-- Credentials alias (AES-protected) -->
-  <authData id="cics_Auth_Id" user="cics_user" password="{aes}..."/>
+  <authData id="cics_Auth_Id" user="<user_id>" password="{aes}..."/>
 
 </server>
 
@@ -360,42 +360,42 @@ Option B only: authData-based Kafka credentials
 -  Create the RACF key ring and certificates (label = `Liberty`)
 
 > Run these TSO commands with appropriate IDs and DNs for your environment.
-> LIBERTY.RING is the generic value for my keyring Ivan.Hargreaves
+> YOUR.KEYRING is the generic value for keyring.
 > Not sure about the syntax of these commands I iterated through some and had failures
 > and can't remember the winning combo
 
 ```tso
-/* Create key ring (owned by Liberty STC user, e.g., WLPUSER) */
-RACDCERT ADDRING(LIBERTY.RING) ID(WLPUSER)                   
+/* Create key ring (owned by Liberty STC user, e.g., <user_id>) */
+RACDCERT ADDRING(YOUR.KEYRING) ID(<user_id>)                   
 
 /* (Optional) Create a CERTAUTH root CA */
 RACDCERT GENCERT CERTAUTH +
   SUBJECTSDN( CN('MyLibertyCA') C('UK') O('YourOrg') OU('Liberty') ) +
   WITHLABEL('LIBERTY.CA') NOTAFTER(DATE(2030/12/31))
 
-/* Create a personal certificate labeled 'Liberty' for WLPUSER */
-RACDCERT GENCERT ID(WLPUSER) +
+/* Create a personal certificate labeled 'Liberty' for <user_id> */
+RACDCERT GENCERT ID(<user_id>) +
   SUBJECTSDN( CN('liberty.example.com') C('UK') O('YourOrg') OU('Liberty') ) +
   WITHLABEL('Liberty') +
   SIGNWITH(CERTAUTH LABEL('LIBERTY.CA')) +
   RSA SIZE(2048) NOTAFTER(DATE(2028/12/31))
 
 /* Connect CA + personal cert to the key ring */
-RACDCERT ID(WLPUSER) CONNECT(CERTAUTH LABEL('LIBERTY.CA') RING(LIBERTY.RING))
-RACDCERT ID(WLPUSER) CONNECT(ID(WLPUSER) LABEL('Liberty') RING(LIBERTY.RING) USAGE(PERSONAL) DEFAULT)
+RACDCERT ID(<user_id>) CONNECT(CERTAUTH LABEL('LIBERTY.CA') RING(YOUR.KEYRING))
+RACDCERT ID(<user_id>) CONNECT(ID(<user_id>) LABEL('Liberty') RING(YOUR.KEYRING) USAGE(PERSONAL) DEFAULT)
 
 /* Verify ring contents */
-RACDCERT LISTRING(LIBERTY.RING) ID(WLPUSER)
+RACDCERT LISTRING(YOUR.KEYRING) ID(<user_id>)
                                                                           
     Digital ring information for user IN00501:                                  
                                                                                 
       Ring:                                                                     
-          >LIBERTY.RING<                                                      
+          >YOUR.KEYRING<                                                      
       Certificate Label Name             Cert Owner     USAGE      DEFAULT      
       --------------------------------   ------------   --------   -------      
       LIBERTY.CA                            CERTAUTH    CERTAUTH     NO         
-      Liberty                            ID(WLPUSR)    PERSONAL     YES        
-                                                                            
+      Liberty                            ID(<user_id>)    PERSONAL     YES 
+
 ```
 
 Reference: JCERACFKS/JCECCARACFKS examples and ring setup [IBM Docs](https://www.ibm.com/docs/en/was-liberty/nd?topic=ssl-configuring-keyring-based-keystore).
@@ -407,7 +407,7 @@ From `${wlp.install.dir}/wlp/bin`, or from SSH shell on zFS to the same, run:
 ```bash
 securityUtility encode \
   --encoding=aes \
-  --keyring=safkeyring:///LIBERTY.RING \
+  --keyring=safkeyring:///YOUR.KEYRING \
   --keyringType=JCERACFKS \
   --keyLabel=Liberty \
   "YourRacfPassword"

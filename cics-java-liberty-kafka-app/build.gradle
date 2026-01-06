@@ -1,63 +1,71 @@
-plugins 
-{
+// ============================================================================
+// Plugins
+// ============================================================================
+plugins {
     id 'java'
     id 'eclipse'
     id 'war'
 }
 
-war
-{
-	archiveFileName = "cics-java-liberty-kafka.war"
-}
-
+// ============================================================================
+// Project Information
+// ============================================================================
 group = 'com.ibm.cicsdev'
 version = '1.0.0'
 
+// ============================================================================
+// Java Configuration
+// ============================================================================
 java {
-    sourceCompatibility = JavaVersion.VERSION_17
-    targetCompatibility = JavaVersion.VERSION_17
+    sourceCompatibility = JavaVersion.toVersion(javaVersion)
+    targetCompatibility = JavaVersion.toVersion(javaVersion)
 }
 
-// If in Eclipse, add Javadoc to the local project classpath
-eclipse
-{
-    classpath
-    {
+// ============================================================================
+// WAR Configuration
+// ============================================================================
+war {
+    archiveFileName = 'cics-java-liberty-kafka.war'
+}
+
+// ============================================================================
+// Eclipse IDE Configuration
+// ============================================================================
+eclipse {
+    classpath {
         downloadJavadoc = true
     }
 }
 
-repositories
-{
-    mavenCentral()                
+// ============================================================================
+// Repositories
+// ============================================================================
+repositories {
+    mavenCentral()
 }
 
-dependencies 
-{
+// ============================================================================
+// Dependencies
+// ============================================================================
+dependencies {
+    // CICS TS Bill of Materials
+    compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:${cicsBomVersion}")
 
-    // BOM: CICS TS V6.3
-    compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:6.3-20250905155520")
+    // Jakarta EE APIs
+    compileOnly("jakarta.platform:jakarta.jakartaee-api:${jakartaVersion}")
 
-    // Jakarta EE 10 version of ManagedExecutorService we compiler against                            
-    compileOnly("jakarta.platform:jakarta.jakartaee-api:10.0.0")
-        
-    // Liberty developer SPI/APIs - WSSubject, WSCallbackHandler (JAAS), AuthData
-    compileOnly("net.wasdev.maven.tools.targets:liberty-apis:25.0.0.9")       
-                      
-    // Compile against, but don't include JCICS in the final build (no need for version because we have BOM)
-    compileOnly("com.ibm.cics:com.ibm.cics.server") 
-    
-    compileOnly("org.eclipse.microprofile:microprofile:7.0")
-    
-    // ---------------------------------------------------------------
-    // Kafka client
-    // ---------------------------------------------------------------
-    implementation "org.apache.kafka:kafka-clients:4.0.1"
-    
-    implementation 'org.slf4j:slf4j-jdk14:2.0.12'
-          
+    // Liberty Developer APIs (WSSubject, WSCallbackHandler, AuthData)
+    compileOnly("net.wasdev.maven.tools.targets:liberty-apis:${libertyApisVersion}")
+
+    // JCICS APIs (version managed by BOM)
+    compileOnly('com.ibm.cics:com.ibm.cics.server')
+
+    // Eclipse MicroProfile
+    compileOnly("org.eclipse.microprofile:microprofile:${microprofileVersion}")
+
+    // Apache Kafka Client
+    implementation "org.apache.kafka:kafka-clients:${kafkaVersion}"
+
+    // SLF4J Logging Implementation
+    implementation "org.slf4j:slf4j-jdk14:${slf4jVersion}"
 }
-
-
-
-
