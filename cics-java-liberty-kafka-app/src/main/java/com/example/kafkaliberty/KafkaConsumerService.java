@@ -31,6 +31,16 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 
+/**
+ * KafkaConsumerService manages **per-topic Kafka consumers** in Liberty.
+ *
+ * <p>
+ * Features: <br>
+ * - Starts/stops consumers dynamically per topic. <br>
+ * - Sets Liberty RunAs Subject to ensure proper CICS transaction identity. <br>
+ * - Handles incoming messages asynchronously via KafkaMessageProcessor.
+ * </p>
+ */
 @ApplicationScoped
 public class KafkaConsumerService
 {
@@ -56,6 +66,14 @@ public class KafkaConsumerService
     private final Map<String, KafkaConsumer<String, String>> consumerMap = new ConcurrentHashMap<>();
 
 
+    /**
+     * Starts consuming messages for a given topic under the caller’s Liberty Subject.
+     *
+     * @param topic
+     *            the Kafka topic to listen on
+     * @param subject
+     *            Liberty Subject of the caller
+     */
     public void startConsuming(String topic, Subject subject)
     {
         // Atomic check to prevent duplicate listeners
@@ -139,9 +157,12 @@ public class KafkaConsumerService
     }
 
 
-    // =====================================================================
-    // STOP CONSUMER
-    // =====================================================================
+    /**
+     * Stops consumption for a given topic.
+     *
+     * @param topic
+     *            Kafka topic to stop
+     */
     public void stop(String topic)
     {
         AtomicBoolean running = runningTopics.get(topic);
@@ -172,8 +193,10 @@ public class KafkaConsumerService
 
 
     /**
-     * Common handler: - Retrieves per-topic Liberty Subject - Sets RunAs once per consumer thread - Calls async
-     * processor
+     * Handles incoming message:<br>
+     * - Checks if the topic is active. <br>
+     * - Sets RunAs Subject for the consumer thread.<br>
+     * - Delegates to KafkaMessageProcessor asynchronously.
      */
     void handleMessage(String topic, String message)
     {
@@ -211,6 +234,9 @@ public class KafkaConsumerService
     }
 
 
+    /**
+     * Restore previous RunAs subject and clear thread-local flags.
+     */
     public void restoreRunAsIfInitialized()
     {
         if (runAsInitialized.get())

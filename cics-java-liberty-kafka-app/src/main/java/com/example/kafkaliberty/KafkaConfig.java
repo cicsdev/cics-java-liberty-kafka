@@ -27,7 +27,7 @@ import jakarta.inject.Inject;
 public class KafkaConfig
 {
 
-    // Map: topic -> CICS transaction ID
+    // Map of topic -> CICS transaction ID
     private final Map<String, String> topicTranMap = new HashMap<>();
 
     @Inject
@@ -35,7 +35,11 @@ public class KafkaConfig
 
 
     /**
-     * Build Kafka consumer Properties dynamically using MP Config.
+     * Build Kafka consumer properties for a given topic using MP Config.
+     *
+     * @param topicName
+     *            the Kafka topic
+     * @return Properties object with bootstrap servers, deserializers, etc.
      */
     public Properties buildKafkaPropertiesForTopic(String topicName)
     {
@@ -76,6 +80,10 @@ public class KafkaConfig
 
     /**
      * Get transaction ID for a given topic.
+     * 
+     * @param topic
+     *            the Kafka topic
+     * @return transaction ID, defaults to "CJSU" if not configured
      */
     public String getTranIdForTopic(String topic)
     {

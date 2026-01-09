@@ -59,10 +59,6 @@
         </application-bnd>
     </application>
     
-    <!--  Enable Java Util Logging in Liberty trace.log for this App -->
-    <logging traceSpecification="com.example.kafka=all"/>
-    
-    
     <!-- Option B: Obtain AES key from RACF key ring at runtime --> 
     <!--  <zosPasswordEncryptionKey keyring="safkeyring:///YOUR.KEYRING" label="Liberty" type="JCERACFKS"/>  -->
         

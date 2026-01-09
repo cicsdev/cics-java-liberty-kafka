@@ -64,8 +64,7 @@ dependencies {
     compileOnly("org.eclipse.microprofile:microprofile:${microprofileVersion}")
 
     // Apache Kafka Client
-    implementation "org.apache.kafka:kafka-clients:${kafkaVersion}"
-
-    // SLF4J Logging Implementation
-    implementation "org.slf4j:slf4j-jdk14:${slf4jVersion}"
+	// The kafka-clients library depends on slf4j-api. 
+	// Liberty supplies the logging implementation at runtime, so no additional SLF4J jars are needed.
+	implementation "org.apache.kafka:kafka-clients:${kafkaVersion}"
 }

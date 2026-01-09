@@ -148,7 +148,7 @@ Add an <application> element to the Liberty server.xml to define the web applica
 ## Running the sample
 
 1. Configure the Kafka connection details and credentials as required.
-2. Update the Liberty `server.xml` if needed (features, logging, security configuration).
+2. Update the Liberty `server.xml` if needed (features, security configuration).
 3. Start the Liberty server and deploy the application.
 
 Kafka consumers will start on application-managed background threads during application initialisation.
@@ -225,12 +225,10 @@ The application uses **Java Util Logging (JUL)** exclusively.
 
 #### Important note on output
 
-By default, **JUL output is written to Liberty’s `trace.log`**, not the console.
+By default, JUL output appears in messages.log when the console log level permits.
 
-To enable console logging, users must configure logging via:
-
-* `server.xml`, or
-* JVM options / JVM profile
+Ensure the following JVM option is set:
+  -Dcom.ibm.ws.logging.console.log.level=INFO
 
 This is documented intentionally so users understand Liberty’s logging behaviour.
 

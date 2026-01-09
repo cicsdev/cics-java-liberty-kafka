@@ -55,21 +55,15 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Apache Kafka Client -->
+        <!-- Apache Kafka Client , The kafka-clients library depends on slf4j-api. 
+		Liberty supplies the logging implementation at runtime, so no additional SLF4J jars are needed.-->
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
             <version>${kafka.version}</version>
         </dependency>
 
-        <!-- SLF4J Logging Implementation -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <!-- Liberty Security APIs (WSSubject, JAAS, AuthData) -->
+		<!-- Liberty Security APIs (WSSubject, JAAS, AuthData) -->
         <dependency>
             <groupId>net.wasdev.maven.tools.targets</groupId>
             <artifactId>liberty-apis</artifactId>

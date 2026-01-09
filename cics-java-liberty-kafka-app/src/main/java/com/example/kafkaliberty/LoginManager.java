@@ -18,6 +18,9 @@ import com.ibm.websphere.security.auth.data.AuthData;
 import com.ibm.websphere.security.auth.data.AuthDataProvider;
 
 
+/**
+ * LoginManager performs **programmatic JAAS login** using Liberty <authData> credentials.
+ */
 public class LoginManager
 {
     // Your server.xml <authData id="...">
@@ -27,6 +30,11 @@ public class LoginManager
     private volatile Subject cachedSubject;
 
 
+    /**
+     * Returns the programmatically logged-in Subject. Uses double-checked locking for thread-safe lazy initialization.
+     *
+     * @return Subject associated with AUTH_DATA_ID
+     */
     public Subject getSubject()
     {
         // Double-lock pattern for Thread-safety
@@ -47,7 +55,12 @@ public class LoginManager
 
 
     /**
-     * JAAS login via system.DEFAULT with WSCallbackHandlerImpl (avoids JCA).
+     * Performs JAAS login programmatically using Liberty AuthData / via system.DEFAULT with WSCallbackHandlerImpl
+     * (avoids JCA).
+     *
+     * @param alias
+     *            the <authData> id in server.xml
+     * @return Subject representing the logged-in user
      */
     private Subject loginUsingAuthDataUserPassword(String alias)
     {

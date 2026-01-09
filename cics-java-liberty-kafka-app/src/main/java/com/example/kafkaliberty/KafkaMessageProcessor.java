@@ -22,6 +22,14 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
 
+/**
+ * KafkaMessageProcessor executes incoming Kafka messages asynchronously in a CICS transaction context.
+ *
+ * <p>
+ * Each message is wrapped in a CICSTransactionRunnable so it runs under the CICS Task environment and automatically
+ * associates with the proper transaction ID based on the topic.
+ * </p>
+ */
 @ApplicationScoped
 public class KafkaMessageProcessor
 {
@@ -35,6 +43,14 @@ public class KafkaMessageProcessor
     private static final Logger LOG = Logger.getLogger(KafkaMessageProcessor.class.getName());
 
 
+    /**
+     * Processes a Kafka message asynchronously.
+     *
+     * @param topic
+     *            Kafka topic name
+     * @param message
+     *            Kafka message payload
+     */
     public void processAsynchronous(String topic, String message)
     {
         LOG.info(() -> "Received message from topic " + topic + " having message : " + message);
@@ -43,7 +59,7 @@ public class KafkaMessageProcessor
 
 
     /**
-     * Runnable that wraps Kafka message and executes in a CICS-managed context.
+     * Runnable wrapper that executes a Kafka message within a CICS transaction.
      */
     private class KafkaCICSTransactionRunnable implements CICSTransactionRunnable
     {
@@ -85,6 +101,11 @@ public class KafkaMessageProcessor
         }
 
 
+        /**
+         * Returns the transaction ID for the topic. This ensures the message runs under the correct CICS transaction.
+         *
+         * @return CICS transaction ID
+         */
         @Override
         public String getTranid()
         {
