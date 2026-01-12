@@ -19,6 +19,17 @@ The sample follows **CICSDev best practices** and is intended both as a runnable
 ## Prerequisites
 
 * Java 17 or later on the workstation
+   For Java 17+ support, ensure you have:
+
+    * **Gradle**: Version 7.3 or later (recommended: 8.0+)
+      - Gradle 7.3+ is required for Java 17 support
+      - Gradle 8.x provides better Java 17-21 compatibility
+      
+    * **Maven**: Version 3.8.1 or later (recommended: 3.9.0+)
+      - Maven 3.8.1+ is required for Java 17 support
+      - Maven 3.9.x provides improved performance and Java 17+ compatibility
+
+    **Note**: The included Gradle and Maven wrapper scripts are pre-configured with compatible versions.
 * WebSphere Liberty
 * Apache Kafka broker (local or remote)
 * One of the following on your workstation:
@@ -93,6 +104,9 @@ gradle.bat clean build
 Gradle (command-line):
 gradle clean build
 
+**Minimum Maven Version**: 3.8.1+ (Java 17 support)
+The Maven wrapper included in this project uses Maven 3.9.x, which fully supports Java 17-21.
+
 Option 2: Building with Apache Maven
 For a complete build you should run the pom.xml file in the top-level 'cics-java-liberty-kafka' directory. A WAR file is created inside the cics-java-liberty-kafka-app/target directory and a CICS bundle ZIP file inside the cics-java-liberty-kafka-bundle/target directory.
 
@@ -106,6 +120,9 @@ mvnw.cmd clean verify
 
 Maven (command-line):
 mvn clean verify
+
+**Minimum Gradle Version**: 7.3+ (Java 17 support)
+The Gradle wrapper included in this project uses Gradle 8.x, which fully supports Java 17-21.
 
 Option 3: Building with Eclipse
 If you are using the Egit client to clone the repo, remember to tick the button to import all projects. Otherwise, you should manually Import the projects into CICS Explorer using File → Import → General → Existing projects into workspace, then follow the error resolution advice above.
