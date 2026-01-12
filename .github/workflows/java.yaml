@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-         jdk: [8, 11, 17]
+         jdk: [17, 21]
          
     steps:
       - uses: actions/checkout@v4
@@ -47,4 +47,4 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
     - name: Build with Gradle
-      run: ./gradlew build bootWar -Pjava_version=${{ matrix.jdk }}
+      run: ./gradlew build -Pjava_version=${{ matrix.jdk }}
