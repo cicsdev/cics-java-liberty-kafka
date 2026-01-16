@@ -376,8 +376,6 @@ Option B only: authData-based Kafka credentials
 
 > Run these TSO commands with appropriate IDs and DNs for your environment.
 > YOUR.KEYRING is the generic value for keyring.
-> Not sure about the syntax of these commands I iterated through some and had failures
-> and can't remember the winning combo
 
 ```tso
 /* Create key ring (owned by Liberty STC user, e.g., <user_id>) */

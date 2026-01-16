@@ -35,9 +35,6 @@
     <!-- Add Strict Transport Security (HSTS) -->
     <webContainer addStrictTransportSecurityHeader="max-age=31536000"/>
     
-    <!-- Add a more secure session timeout (default is 120 mins) -->
-    <ltpa expiration="60m"/>
-    
     <config monitorInterval="5s" updateTrigger="polled"/>
     
     <!-- The application start timeout specifies the maximum
