@@ -1,4 +1,4 @@
-Sample - cics-java-liberty-kafka (Kafka on Liberty with Jakarta EE)
+#  cics-java-liberty-kafka (Kafka on Liberty with Jakarta EE)
 
 ## What this sample does
 
@@ -39,14 +39,12 @@ The sample follows **CICSDev best practices** and is intended both as a runnable
 
 ---
 
-Downloading
+### Downloading
 Clone the repository using your IDEs support, such as the Eclipse Git plugin
 or, download the sample as a ZIP and unzip onto the workstation
-Tip
+>*Tip: Eclipse Git provides an 'Import existing Projects' check-box when cloning a repository.*
 
-Eclipse Git provides an 'Import existing Projects' check-box when cloning a repository.
-
-Check dependencies
+### Check dependencies
 If you are building this sample with Gradle or Maven you should verify that the correct CICS TS bill of materials (BOM) is specified for your target release of CICS. The BOM specifies a consistent set of artifacts, and adds information about their scope. In the example below the version specified is compatible with CICS TS V6.3, or newer. You can browse the published versions of the CICS BOM at Maven Central.
 
 Gradle (build.gradle):
@@ -55,6 +53,7 @@ compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:6.3-2025090515552
 
 Maven (POM.xml):
 
+``` xml
 <dependencyManagement>
     <dependencies>
       <dependency>
@@ -66,6 +65,7 @@ Maven (POM.xml):
       </dependency>
     </dependencies>
   </dependencyManagement>
+``` 
 
 ---
 
@@ -73,20 +73,19 @@ Maven (POM.xml):
 
 You can build the sample in a variety of ways:
 
-Using the implicit compile/build of the Eclipse based CICS Explorer SDK
-Using the built-in Gradle or Maven support of your IDE (For example: buildship or m2e in Eclipse which integrate with the "Run As..." menu.)
-Using the supplied Gradle or Maven Wrapper scripts (no requirement for an IDE or Gradle/Maven install)
-or you can build it from the command line if you have Gradle or Maven installed on your workstation
+- Using the implicit compile/build of the Eclipse based CICS Explorer SDK
+- Using the built-in Gradle or Maven support of your IDE (For example: buildship or m2e in Eclipse which integrate with the "Run As..." menu.)
+- Using the supplied Gradle or Maven Wrapper scripts (no requirement for an IDE or Gradle/Maven install) or you can build it from the command line if you have Gradle or Maven installed on your workstation
 
 Important
 
-The sample comes pre-configured for use with a JDK 17 and CICS TS V6.3 Libraries. When you initially import the project to your IDE, if your IDE is not configured for a JDK 17, or does not have CICS Explorer SDK installed, you might experience local project compile errors. To resolve issues you should configure the Project's build-path to add/remove your preferred combination of CICS TS, JDK, and Liberty's Enterprise Java libraries (Jakarta EE). Resolving errors might also depend on how you wish to build and deploy the sample. If you are building and deploying through CICS Explorer SDK and 'Export to zFS' you should edit the link-app's Project properties. Select 'Java Build Path', on the Libraries tab select 'Classpath', click 'Add Library', select 'CICS with Enterprise Java and Liberty' Library, and choose the appropriate CICS and Enterprise Java versions. If you are building and deploying with Gradle or Maven then you don't necessarily need to fix the local errors, but to do so, you can do as above, or you can run a tooling refresh on the cics-java-liberty-kafka project. For example, in Eclipse: right-click on "Project", select "Gradle -> Refresh Gradle Project", or right-click on "Project", select "Maven -> Update Project...".
+The sample comes pre-configured for use with a JDK 17 and CICS TS V6.3 Libraries. When you initially import the project to your IDE, if your IDE is not configured for a JDK 17, or does not have CICS Explorer SDK installed, you might experience local project compile errors. To resolve issues you should configure the Project's build-path to add/remove your preferred combination of CICS TS, JDK, and Liberty's Enterprise Java libraries (Jakarta EE). Resolving errors might also depend on how you wish to build and deploy the sample. If you are building and deploying through CICS Explorer SDK and 'Export to zFS' you should edit the link-app's Project properties. Select 'Java Build Path', on the Libraries tab select 'Classpath', click 'Add Library', select 'CICS with Enterprise Java and Liberty' Library, and choose the appropriate CICS and Enterprise Java versions. 
 
-Tip
+**Note:**If you are building and deploying with Gradle or Maven then you don't necessarily need to fix the local errors, but to do so, you can do as above, or you can run a tooling refresh on the cics-java-liberty-kafka project. For example, in Eclipse: right-click on "Project", select "Gradle -> Refresh Gradle Project", or right-click on "Project", select "Maven -> Update Project...".
 
-In Eclipse, Gradle (buildship) is able to fully refresh and resolve the local classpath even if the project was previously updated by Maven. However, Maven (m2e) does not currently reciprocate that capability. If you previously refreshed the project with Gradle, you'll need to manually remove the 'Project Dependencies' entry on the Java build-path of your Project Properties to avoid duplication errors when performing a Maven Project Update.
+>Tip: * In Eclipse, Gradle (buildship) is able to fully refresh and resolve the local classpath even if the project was previously updated by Maven. However, Maven (m2e) does not currently reciprocate that capability. If you previously refreshed the project with Gradle, you'll need to manually remove the 'Project Dependencies' entry on the Java build-path of your Project Properties to avoid duplication errors when performing a Maven Project Update.*
 
-Option 1: Building with Gradle
+#### Option 1: Building with Gradle
 For a complete build you should run the settings.gradle file in the top-level 'cics-java-liberty-kafka' directory which is designed to invoke the individual build.gradle files for each project.
 
 If successful, a WAR file is created inside the cics-java-liberty-kafka-app/build/libs and  and a CICS bundle ZIP file inside the cics-java-liberty-kafka-bundle/build/distribution directory.
@@ -96,43 +95,56 @@ If successful, a WAR file is created inside the cics-java-liberty-kafka-app/buil
 The JVM server the CICS bundle is targeted at is controlled through the cics.jvmserver property, defined in the cics-java-liberty-kafka-bundle/build.gradle file, or alternatively can be set on the command line:
 
 Gradle Wrapper (Linux/Mac):
+```shell
 ./gradlew clean build
+```
 
 Gradle Wrapper (Windows):
+```shell
 gradle.bat clean build
+```
 
 Gradle (command-line):
+```shell
 gradle clean build
+```
 
 **Minimum Maven Version**: 3.8.1+ (Java 17 support)
 The Maven wrapper included in this project uses Maven 3.9.x, which fully supports Java 17-21.
 
-Option 2: Building with Apache Maven
+#### Option 2: Building with Apache Maven
 For a complete build you should run the pom.xml file in the top-level 'cics-java-liberty-kafka' directory. A WAR file is created inside the cics-java-liberty-kafka-app/target directory and a CICS bundle ZIP file inside the cics-java-liberty-kafka-bundle/target directory.
 
 If building a CICS bundle ZIP the CICS JVM server name for the WAR bundle part should be modified in the cics.jvmserver property, defined in cics-java-liberty-link-kafka/pom.xml file under the defaultjvmserver configuration property, or alternatively can be set on the command line.
 
 Maven Wrapper (Linux/Mac):
+```shell
 ./mvnw clean verify
+```
 
 Maven Wrapper (Windows):
+```shell
 mvnw.cmd clean verify
+```
 
 Maven (command-line):
+```shell
 mvn clean verify
+```
 
 **Minimum Gradle Version**: 7.3+ (Java 17 support)
 The Gradle wrapper included in this project uses Gradle 8.x, which fully supports Java 17-21.
 
-Option 3: Building with Eclipse
+#### Option 3: Building with Eclipse
 If you are using the Egit client to clone the repo, remember to tick the button to import all projects. Otherwise, you should manually Import the projects into CICS Explorer using File → Import → General → Existing projects into workspace, then follow the error resolution advice above.
 
 ---
 
-Deploying to a Liberty JVM server
+## Deploying to a Liberty JVM server
 
 Ensure you have the following features defined in your Liberty server.xml:
 
+``` XML
 <featureManager>
         <feature>appSecurity-5.0</feature>
         <feature>cicsts:core-1.0</feature>
@@ -143,20 +155,21 @@ Ensure you have the following features defined in your Liberty server.xml:
         <feature>restfulWS-3.1</feature>
         <feature>concurrent-3.0</feature>
 </featureManager>
+``` 
 
-Deploying CICS Bundles from Gradle or Maven
+## Deploying CICS Bundles from Gradle or Maven
 
 Manually upload the ZIP file from the cics-java-liberty-kafka-bundle/target or cics-java-liberty-kafka-bundle/build/distributions directory to zFS.
 Unzip this ZIP file on zFS (e.g. ${JAVA_HOME}/bin/jar xf /path/to/bundle.zip).
 Create a CICS BUNDLE resource definition, setting the bundle directory attribute to the zFS location you just extracted to, and install it into the CICS region.
 
-Deploying CICS Bundles with CICS Explorer
+## Deploying CICS Bundles with CICS Explorer
 
 Optionally, change the name of the JVMSERVER in the .warbundle file of the CICS bundle project to the name of your JVMSERVER resource defined in CICS.
 Export the bundle project to zFS by selecting 'Export Bundle project to z/OS Unix File System' from the context menu.
 In CICS, create a bundle definition, setting the bundle directory attribute to the zFS location you just exported to, and install it.
 
-Deploying directly with Liberty's application configuration
+## Deploying directly with Liberty's application configuration
 Manually upload the WAR file from the cics-java-liberty-kafka-app/target or cics-java-liberty-kafka-app/build/libs directory to zFS.
 Add an <application> element to the Liberty server.xml to define the web application.
 
@@ -170,8 +183,10 @@ Add an <application> element to the Liberty server.xml to define the web applica
 
 Kafka consumers will start on application-managed background threads during application initialisation.
 
-Make the kafka consumer start/stop using - http://<url>/cics-java-liberty-kafka/control/start?topic=<topic-name> or http://<url>/cics-java-liberty-kafka/control/stop?topic=<topic-name>
-
+Make the kafka consumer start/stop using - 
+```xml
+http://<url>/cics-java-liberty-kafka/control/start?topic=<topic-name> or http://<url>/cics-java-liberty-kafka/control/stop?topic=<topic-name>
+```
 ---
 
 ## Architecture and Design Rationale
@@ -338,7 +353,7 @@ server.xml configuration (Option B only)
 
 Option B only: authData-based Kafka credentials        
 
-
+```xml
 <server>
   <featureManager>
     <feature>appSecurity-5.0</feature>
