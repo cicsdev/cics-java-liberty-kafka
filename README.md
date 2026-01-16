@@ -294,8 +294,8 @@ Kafka consumers execute on application-managed background threads, so security i
 
 Two supported approaches are documented:
 
-Option A: Subject-based RunAs identity (default)
-Option B: authData-based identity (alternative)
+- Option A: Subject-based RunAs identity (default)
+- Option B: authData-based identity (alternative)
 
 Only one option should be used at a time.
 
@@ -305,10 +305,10 @@ This is the default approach implemented in the sample code. The application exp
 
 Key characteristics:
 
-A Subject representing the service identity is obtained during application initialisation
-The identity is applied using WSSubject.setRunAsSubject(subject)
-The RunAs subject is set once per consumer thread and reused for subsequent processing
-Previous identity state is captured and managed explicitly
+A Subject representing the service identity is obtained during application initialisation.
+The identity is applied using WSSubject.setRunAsSubject(subject).
+The RunAs subject is set once per consumer thread and reused for subsequent processing.
+Previous identity state is captured and managed explicitly.
 
 This approach:
 
@@ -323,19 +323,16 @@ As an alternative to Subject-based RunAs identity, the sample can be configured 
 
 In this model:
 
-Service credentials are defined declaratively in server.xml
-The application references the configured authData by name
-Liberty manages credential lookup and association
-No explicit Subject or RunAs switching is performed in application code
+* Service credentials are defined declaratively in server.xml
+* The application references the configured authData by name
+* Liberty manages credential lookup and association
 
 This approach:
 
-Centralises credential management in server configuration
-Reduces application-level security handling
-Is preferred when credentials must not appear in application code
-Aligns well with operationally managed environments
-
-When Option B is used, the Subject-based RunAs logic should be disabled or bypassed to avoid conflicting identity models.
+* Centralises credential management in server configuration
+* Reduces application-level security handling
+* Is preferred when credentials must not appear in application code
+* Aligns well with operationally managed environments
 
 server.xml configuration (Option B only)
 
@@ -345,9 +342,13 @@ Option B only: authData-based Kafka credentials
 <server>
   <featureManager>
     <feature>appSecurity-5.0</feature>
+    <feature>cicsts:core-1.0</feature>
+    <feature>microprofile-7.0</feature>
+    <feature>transportSecurity-1.0</feature>
+    <feature>cicsts:security-1.0</feature>
     <feature>cdi-4.0</feature>
-    <feature>servlet-6.0</feature>
-    <feature>concurrent-3.0</feature>
+    <feature>restfulWS-3.1</feature>
+    <feature>concurrent-3.0</feature>    
     <feature>passwordUtilities-1.0</feature>
     <feature>zosPasswordEncryptionKey-1.0</feature>
   </featureManager>

@@ -10,27 +10,14 @@
         <feature>cdi-4.0</feature>
     	<feature>restfulWS-3.1</feature>
     	<feature>concurrent-3.0</feature>
+    	<!-- <feature>passwordUtilities-1.0</feature>
+    	<feature>zosPasswordEncryptionKey-1.0</feature> -->
     </featureManager>
     
-    <!-- Default HTTP End Point -->
-    <httpEndpoint host="*" httpPort="12372" httpsPort="12373" id="defaultHttpEndpoint">
-        <!-- Increase server security with the OWASP recommended HTTP headers.
-             These should be configured further to meet the security needs of
-             your web applications, especially the Content-Security-Policty
-             (CSP) header. -->
-        <headers>
-            <setIfMissing>Content-Security-Policy</setIfMissing>
-            <setIfMissing>Referrer-Policy: strict-origin-when-cross-origin</setIfMissing>
-            <setIfMissing>X-Content-Type-Options: nosniff</setIfMissing>
-            <setIfMissing>X-Frame-Options: DENY</setIfMissing>
-        </headers>
-    </httpEndpoint>
-    
-    <!-- Provide more secure cookie defaults -->
-    <httpSession cookieHttpOnly="true" cookieSecure="true"/>
-    
-    <!-- Provide more secure application defaults -->
-    <webAppSecurity httpOnlyCookies="true" ssoRequiresSSL="true"/>
+    <!-- To access this server from a remote client add a host attribute to the following element, e.g. host="*" -->
+    <httpEndpoint id="defaultHttpEndpoint"
+                  httpPort="9080"
+                  httpsPort="9443" />
     
     <!-- Add Strict Transport Security (HSTS) -->
     <webContainer addStrictTransportSecurityHeader="max-age=31536000"/>
@@ -60,9 +47,11 @@
     <!--  <zosPasswordEncryptionKey keyring="safkeyring:///YOUR.KEYRING" label="Liberty" type="JCERACFKS"/>  -->
         
     <!-- Option B: Credentials alias (AES-protected) --> 
-    <!-- <authData id="cicsSAF" user="<user_id>" password="{aes}ARI673meZr9vy...." /> -->    
+    <!-- <authData id="cicsSAF" user="<user_id>" password="{aes}ARI673meZr9vy...." /> -->
     
-    <keyStore fileBased="false" id="defaultKeyStore" location="safkeyring:///YOUR.KEYRING" password="password" readOnly="true" type="JCERACFKS"/>
+    <!--  (Optional) Use RACF key ring as SSL keystore  -->
+    <!-- <keyStore fileBased="false" id="defaultKeyStore" location="safkeyring:///YOUR.KEYRING" password="password" readOnly="true" type="JCERACFKS"/> -->
+
     <ssl clientAuthenticationSupported="true" id="defaultSSLConfig" keyStoreRef="defaultKeyStore" sslProtocol="TLSv1.3,TLSv1.2"/>
         
     <cdi enableImplicitBeanArchives="false"/>
