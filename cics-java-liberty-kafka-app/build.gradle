@@ -12,6 +12,7 @@ plugins {
 // ============================================================================
 group = 'com.ibm.cicsdev'
 version = '1.0.0'
+archivesBaseName='cics-java-liberty-kafka'
 
 // ============================================================================
 // Java Configuration
@@ -19,13 +20,6 @@ version = '1.0.0'
 java {
     sourceCompatibility = JavaVersion.toVersion(javaVersion)
     targetCompatibility = JavaVersion.toVersion(javaVersion)
-}
-
-// ============================================================================
-// WAR Configuration
-// ============================================================================
-war {
-    archiveFileName = 'cics-java-liberty-kafka.war'
 }
 
 // ============================================================================
