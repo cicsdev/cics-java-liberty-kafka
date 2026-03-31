@@ -20,6 +20,19 @@ import com.ibm.websphere.security.auth.data.AuthDataProvider;
 
 /**
  * LoginManager performs **programmatic JAAS login** using Liberty <authData> credentials.
+ *
+ * <p>
+ * <b>Purpose:</b><br>
+ * This class provides an alternative to capturing the HTTP caller's Subject. Instead of
+ * using WSSubject.getCallerSubject(), this approach uses credentials stored in server.xml
+ * to perform a programmatic login and obtain a Subject.
+ * </p>
+ *
+ * <p>
+ * <b>Note:</b> This class is present in the codebase but not active by default.
+ * To use it, uncomment the LoginManager injection in KafkaController and modify
+ * the start() method to call loginManager.getSubject() instead of WSSubject.getCallerSubject().
+ * </p>
  */
 public class LoginManager
 {
@@ -31,13 +44,18 @@ public class LoginManager
 
 
     /**
-     * Returns the programmatically logged-in Subject. Uses double-checked locking for thread-safe lazy initialization.
+     * Returns the programmatically logged-in Subject.
+     *
+     * <p>
+     * Uses double-checked locking for thread-safe lazy initialization. The Subject is
+     * cached to avoid expensive repeated JAAS login operations.
+     * </p>
      *
      * @return Subject associated with AUTH_DATA_ID
      */
     public Subject getSubject()
     {
-        // Double-lock pattern for Thread-safety
+        // Double-checked locking pattern for thread-safe lazy initialization
         Subject s = cachedSubject;
         if (s == null)
         {
@@ -55,26 +73,25 @@ public class LoginManager
 
 
     /**
-     * Performs JAAS login programmatically using Liberty AuthData / via system.DEFAULT with WSCallbackHandlerImpl
-     * (avoids JCA).
+     * Performs JAAS login programmatically using Liberty AuthData credentials.
      *
-     * @param alias
-     *            the <authData> id in server.xml
+     * @param alias the <authData> id in server.xml (e.g., "cicsSAF")
      * @return Subject representing the logged-in user
+     * @throws RuntimeException if login fails
      */
     private Subject loginUsingAuthDataUserPassword(String alias)
     {
         try
         {
-            // 1) Obtain credentials from server.xml <authData>
+            // Obtain credentials from server.xml <authData> element
             AuthData ad = AuthDataProvider.getAuthData(alias);
             String user = ad.getUserName();
 
-            // Liberty decodes the {aes} password generated with securityUtility offline
+            // Liberty decrypts {aes} password
             char[] pwdChars = ad.getPassword();
             String password = new String(pwdChars);
 
-            // 2) Programmatic JAAS login
+            // Perform JAAS login using system.DEFAULT configuration
             LoginContext lc = new LoginContext("system.DEFAULT", new WSCallbackHandlerImpl(user, password));
             lc.login();
             return lc.getSubject();

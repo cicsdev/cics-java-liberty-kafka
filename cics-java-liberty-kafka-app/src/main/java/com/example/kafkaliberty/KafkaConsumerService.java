@@ -35,10 +35,12 @@ import jakarta.inject.Inject;
  * KafkaConsumerService manages **per-topic Kafka consumers** in Liberty.
  *
  * <p>
- * Features: <br>
- * - Starts/stops consumers dynamically per topic. <br>
- * - Sets Liberty RunAs Subject to ensure proper CICS transaction identity. <br>
- * - Handles incoming messages asynchronously via KafkaMessageProcessor.
+ * <b>Features:</b>
+ * <ul>
+ * <li>Dynamic start/stop of consumers per topic</li>
+ * <li>Sets Liberty RunAs Subject to ensure proper CICS transaction identity</li>
+ * <li>Handles incoming messages asynchronously via KafkaMessageProcessor</li>
+ * </ul>
  * </p>
  */
 @ApplicationScoped
@@ -67,16 +69,25 @@ public class KafkaConsumerService
 
 
     /**
-     * Starts consuming messages for a given topic under the caller’s Liberty Subject.
+     * Starts consuming messages for a given topic under the caller's Liberty Subject.
      *
-     * @param topic
-     *            the Kafka topic to listen on
-     * @param subject
-     *            Liberty Subject of the caller
+     * <p>
+     * Uses AtomicBoolean and ConcurrentHashMap to prevent duplicate consumers for the same topic.
+     * Multiple topics can run concurrently, each on its own thread.
+     * </p>
+     *
+     * <p>
+     * <b>Security Context:</b><br>
+     * The provided Subject is stored and used by handleMessage() to establish RunAs identity
+     * on the consumer thread before processing messages.
+     * </p>
+     *
+     * @param topic the Kafka topic to listen on
+     * @param subject Liberty Subject of the authenticated caller
      */
     public void startConsuming(String topic, Subject subject)
     {
-        // Atomic check to prevent duplicate listeners
+        // Atomic check to prevent duplicate listeners for the same topic
         AtomicBoolean flag = new AtomicBoolean(true);
         AtomicBoolean existing = runningTopics.putIfAbsent(topic, flag);
 
@@ -86,11 +97,13 @@ public class KafkaConsumerService
             return;
         }
 
+        // Create and start a new consumer thread for this topic
         Thread t = new Thread(() ->
         {
             KafkaConsumer<String, String> consumer = null;
             try
             {
+                // Build Kafka consumer properties from Config
                 Properties props = config.buildKafkaPropertiesForTopic(topic);
 
                 if (props.isEmpty())
@@ -101,15 +114,20 @@ public class KafkaConsumerService
 
                 LOG.info("Kafka props for " + topic + ": " + props);
 
+                // Create and subscribe the Kafka consumer
                 consumer = new KafkaConsumer<>(props);
                 consumer.subscribe(Collections.singletonList(topic));
 
+                // Store consumer reference
                 consumerMap.put(topic, consumer);
 
+                // Poll loop: continues until stop() is called
                 while (runningTopics.get(topic).get())
                 {
+                    // Poll for new messages (200ms timeout)
                     ConsumerRecords<String, String> records = consumer.poll(java.time.Duration.ofMillis(200));
 
+                    // Process each message in the batch
                     for (ConsumerRecord<String, String> r : records)
                     {
                         try
@@ -133,6 +151,7 @@ public class KafkaConsumerService
             }
             finally
             {
+                // Clean up resources
                 if (consumer != null)
                 {
                     try
@@ -141,12 +160,14 @@ public class KafkaConsumerService
                     }
                     catch (Exception ignored)
                     {
-                        // TODO: Log exception
+                        LOG.warning("Error closing consumer: " + ignored.getMessage());
                     }
                 }
 
+                // Restore previous RunAs Subject if it was set
                 restoreRunAsIfInitialized();
 
+                // Remove topic from active maps
                 runningTopics.remove(topic);
                 consumerMap.remove(topic);
 
@@ -160,8 +181,12 @@ public class KafkaConsumerService
     /**
      * Stops consumption for a given topic.
      *
-     * @param topic
-     *            Kafka topic to stop
+     * <p>
+     * This method signals the consumer thread to stop polling. The consumer will finish processing
+     * the current batch before the thread exits.
+     * </p>
+     *
+     * @param topic Kafka topic to stop
      */
     public void stop(String topic)
     {
@@ -175,32 +200,43 @@ public class KafkaConsumerService
 
         LOG.info("Stopping consumer for topic: " + topic);
 
+        // Signal the poll loop to exit
         running.set(false);
 
+        // Interrupt any in-progress poll() call
         KafkaConsumer<String, String> consumer = consumerMap.get(topic);
         if (consumer != null)
         {
             try
             {
-                consumer.wakeup(); // force poll() to exit NOW
+                consumer.wakeup(); // Forces poll() to throw WakeupException
             }
             catch (Exception ignored)
             {
-                // TODO: log exception
+                LOG.warning("Error during consumer wakeup: " + ignored.getMessage());
             }
         }
     }
 
 
     /**
-     * Handles incoming message:<br>
-     * - Checks if the topic is active. <br>
-     * - Sets RunAs Subject for the consumer thread.<br>
-     * - Delegates to KafkaMessageProcessor asynchronously.
+     * Handles incoming Kafka message with security context management.
+     *
+     * <p>
+     * <b>Process Flow:</b>
+     * <ol>
+     * <li>Retrieves the Subject for this topic from the controller</li>
+     * <li>Sets RunAs Subject on the consumer thread</li>
+     * <li>Delegates message processing to KafkaMessageProcessor</li>
+     * </ol>
+     * </p>
+     *
+     * @param topic Kafka topic name
+     * @param message Kafka message payload
      */
     void handleMessage(String topic, String message)
     {
-
+        // Retrieve the Subject associated with this topic
         Subject subject = control.getActiveTopics().get(topic);
 
         if (subject == null)
@@ -210,10 +246,12 @@ public class KafkaConsumerService
             return;
         }
 
+        // Set RunAs Subject once per consumer thread
         if (!runAsInitialized.get())
         {
             try
             {
+                // Save previous RunAs Subject for restoration on thread exit
                 Subject prev = WSSubject.getRunAsSubject();
                 previousRunAs.set(prev);
 
@@ -229,13 +267,13 @@ public class KafkaConsumerService
             }
         }
 
-        // Submit message to your async processor
+        // Submit message to async processor
         processor.processAsynchronous(topic, message);
     }
 
 
     /**
-     * Restore previous RunAs subject and clear thread-local flags.
+     * Restores the previous RunAs Subject and clears ThreadLocal flags.
      */
     public void restoreRunAsIfInitialized()
     {

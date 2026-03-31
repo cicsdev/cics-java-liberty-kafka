@@ -34,8 +34,37 @@ import jakarta.ws.rs.core.Response;
  * KafkaController provides REST endpoints to dynamically start and stop consumption of Kafka topics.
  *
  * <p>
- * - /control/start?topic={topic} activates a Kafka topic for consumption under the caller's security Subject. <br>
- * - /control/stop?topic={topic} deactivates a Kafka topic and stops processing.
+ * This controller manages the lifecycle of Kafka consumers in a CICS Liberty environment using Jakarta EE.
+ * </p>
+ *
+ * <p>
+ * <b>Key Features:</b>
+ * <ul>
+ * <li>Dynamic topic activation/deactivation via REST endpoints</li>
+ * <li>Per-topic security context management using Liberty Subject</li>
+ * <li>Explicit RunAs identity propagation for CICS transactions</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * <b>REST Endpoints:</b>
+ * <ul>
+ * <li><code>GET/POST /control/start?topic={topic}</code> - Activates a Kafka topic for consumption under the caller's security Subject</li>
+ * <li><code>GET/POST /control/stop?topic={topic}</code> - Deactivates a Kafka topic and stops processing</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * <b>Security Model:</b><br>
+ * The controller captures the authenticated user's Liberty Subject when /start is called.
+ * Different topics can run under different identities (different users call /start).
+ * </p>
+ *
+ * <p>
+ * <b>Alternative Security Approach:</b><br>
+ * The commented-out LoginManager can be used for programmatic JAAS login with authData
+ * from server.xml instead of capturing the HTTP caller's Subject. See LoginManager.java
+ * and README.md for configuration details.
  * </p>
  */
 @ApplicationScoped
@@ -56,30 +85,31 @@ public class KafkaController
     // @Autowired(required = false)
     // private LoginManager loginManager;
 
-    // ---------------------------------------------------------------
-    // REST API to start consuming messages from a topic
-    // ---------------------------------------------------------------
-
-
+    
+    /**
+     * Start consumption for a single topic under the caller's Liberty Subject.
+     *
+     * <p>
+     * The captured Subject represents the authenticated user who called this endpoint.
+     * This identity will be used for all CICS transactions processing messages from this topic.
+     * Different topics can run under different identities if different users call /start.
+     * </p>
+     *
+     * @param topic Name of the Kafka topic to start consuming (required)
+     * @return HTTP 200 with success message, or 400/401 on error
+     */
     @GET
     @Path("/start")
     @Produces(MediaType.TEXT_PLAIN)
-    /**
-     * Start consumption for a single topic under the caller's Liberty Subject (JWT/OIDC/Basic).
-     * 
-     * @param topic
-     *            Name of the Kafka topic to start consuming
-     * @return HTTP Response indicating success or failure
-     */
     public Response start(@QueryParam("topic") String topic)
     {
-        // Validate input
+        // Validate 'topic' early to avoid NPE in the map.
         if (topic == null || topic.isBlank())
         {
             return Response.status(400).entity("ERROR: missing topic").build();
         }
 
-        // Capture the caller’s Liberty Subject
+        // Capture the caller's Liberty Subject
         Subject subject;
         try
         {
@@ -91,53 +121,72 @@ public class KafkaController
             return Response.status(401).entity("ERROR: cannot obtain caller subject: " + e).build();
         }
 
-        // Verify authentication
+        // Verify authentication (Subject must not be null)
         if (subject == null)
         {
             return Response.status(401).entity("ERROR: unauthenticated request").build();
         }
 
-        // Activate topic by saving its Subject
+        // Check if topic is already active
+        if (activeTopics.containsKey(topic))
+        {
+            LOG.info(() -> ("Listener already running for topic " + topic));
+            return Response.ok("Listener already running for topic=" + topic).build();
+        }
+
+        // Store the Subject for this topic
         activeTopics.put(topic, subject);
 
-        // Trigger the consumer service to start processing messages
+        // Start the Kafka consumer on a background thread
         kafkaConsumer.startConsuming(topic, subject);
-
+        
         LOG.info(() -> ("Started listener for topic " + topic));
         return Response.ok("Started listener for topic=" + topic).build();
     }
 
 
+    /**
+     * Deactivate a Kafka topic and stop message consumption.
+     *
+     * <p>
+     * This method stops the Kafka consumer thread for the specified topic.
+     * The consumer will finish processing the current batch before the thread exits.
+     * The Subject mapping for this topic is also removed.
+     * </p>
+     *
+     * @param topic Kafka topic to stop (required)
+     * @return HTTP 200 with success message, or 400 if topic parameter is missing
+     */
     @GET
     @Path("/stop")
     @Produces(MediaType.TEXT_PLAIN)
-    /**
-     * Deactivate a Kafka topic.
-     * 
-     * @param topic
-     *            Kafka topic to stop
-     * @return HTTP Response indicating success or failure
-     */
     public Response stop(@QueryParam("topic") String topic)
     {
+        // Validate input parameter
         if (topic == null || topic.isBlank())
         {
             return Response.status(400).entity("ERROR: missing topic").build();
         }
 
+        // Remove the Subject mapping for this topic
         activeTopics.remove(topic);
+        
+        // Signal the consumer service to stop the consumer thread
         kafkaConsumer.stop(topic);
 
         LOG.info(() -> ("Stopped listener for topic " + topic));
         return Response.ok("Stopped listener for topic=" + topic).build();
     }
 
-
-    // ---------------------------------------------------------------
-    // Accessor for active topics map
-    // ---------------------------------------------------------------
     /**
-     * @return a map of currently active topics and their associated Subjects
+     * Returns the map of currently active topics and their associated Subjects.
+     *
+     * <p>
+     * This map is used by KafkaConsumerService to retrieve the Subject for a topic
+     * when processing messages.
+     * </p>
+     *
+     * @return Map of topic names to Liberty Subjects
      */
     public Map<String, Subject> getActiveTopics()
     {

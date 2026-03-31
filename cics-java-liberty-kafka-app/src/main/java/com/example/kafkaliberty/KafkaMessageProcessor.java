@@ -26,8 +26,13 @@ import jakarta.inject.Inject;
  * KafkaMessageProcessor executes incoming Kafka messages asynchronously in a CICS transaction context.
  *
  * <p>
- * Each message is wrapped in a CICSTransactionRunnable so it runs under the CICS Task environment and automatically
- * associates with the proper transaction ID based on the topic.
+ * <b>Key Responsibilities:</b>
+ * <ul>
+ * <li>Submits messages to Liberty's ManagedExecutorService for async processing</li>
+ * <li>Wraps each message in a CICSTransactionRunnable for CICS transaction context</li>
+ * <li>Maps topics to CICS transaction IDs dynamically</li>
+ * <li>Ensures messages run on CICS-aware threads</li>
+ * </ul>
  * </p>
  */
 @ApplicationScoped
@@ -44,12 +49,16 @@ public class KafkaMessageProcessor
 
 
     /**
-     * Processes a Kafka message asynchronously.
+     * Processes a Kafka message asynchronously in a CICS transaction context.
      *
-     * @param topic
-     *            Kafka topic name
-     * @param message
-     *            Kafka message payload
+     * <p>
+     * This method submits the message to Liberty's ManagedExecutorService, which creates
+     * CICS-aware threads. The message is wrapped in a CICSTransactionRunnable to ensure
+     * it executes within a CICS transaction with the appropriate transaction ID.
+     * </p>
+     *
+     * @param topic Kafka topic name
+     * @param message Kafka message payload
      */
     public void processAsynchronous(String topic, String message)
     {
@@ -63,7 +72,6 @@ public class KafkaMessageProcessor
      */
     private class KafkaCICSTransactionRunnable implements CICSTransactionRunnable
     {
-
         private final String kafkaMessage;
         private final String topic;
 
@@ -75,6 +83,9 @@ public class KafkaMessageProcessor
         }
 
 
+        /**
+         * Executes the message processing logic within a CICS transaction.
+         */
         @Override
         public void run()
         {
@@ -85,6 +96,7 @@ public class KafkaMessageProcessor
                 return;
             }
 
+            // Log the user ID under which this transaction is running
             try
             {
                 String userId = task.getUSERID();
@@ -95,6 +107,7 @@ public class KafkaMessageProcessor
                 LOG.log(Level.FINE, "Failed to get userid", e);
             }
 
+            // Process the message
             LOG.info(() -> ("DEBUG: Topic = " + topic));
             LOG.info(() -> ("DEBUG: Finished processing Kafka message in thread: " + Thread.currentThread().getName()
                 + " " + kafkaMessage));
@@ -102,9 +115,14 @@ public class KafkaMessageProcessor
 
 
         /**
-         * Returns the transaction ID for the topic. This ensures the message runs under the correct CICS transaction.
+         * Returns the CICS transaction ID for this message.
          *
-         * @return CICS transaction ID
+         * <p>
+         * The transaction ID is determined by looking up the topic in KafkaConfig.
+         * If no mapping exists, the default transaction ID "CJSU" is used.
+         * </p>
+         *
+         * @return CICS transaction ID (e.g., "KAFK", "KAF1", or "CJSU")
          */
         @Override
         public String getTranid()
