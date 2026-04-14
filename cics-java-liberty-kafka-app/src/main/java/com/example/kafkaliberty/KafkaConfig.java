@@ -21,7 +21,13 @@ import jakarta.inject.Inject;
 
 
 /**
- * Holds transaction mapping per Kafka topic. Equivalent of Spring's @ConfigurationProperties("cics.transaction")
+ * Configuration class that holds transaction mapping per Kafka topic.
+ *
+ * <p>
+ * This class uses MicroProfile Config to read configuration from microprofile-config.properties.
+ * It serves a similar purpose to Spring Boot's @ConfigurationProperties.
+ * </p>
+ *
  */
 @ApplicationScoped
 public class KafkaConfig
@@ -35,11 +41,14 @@ public class KafkaConfig
 
 
     /**
-     * Build Kafka consumer properties for a given topic using MP Config.
+     * Builds Kafka consumer properties for a given topic using MicroProfile Config.
      *
-     * @param topicName
-     *            the Kafka topic
-     * @return Properties object with bootstrap servers, deserializers, etc.
+     * <p>
+     * This method reads configuration from microprofile-config.properties and constructs
+     * a Properties object suitable for creating a KafkaConsumer. 
+     *
+     * @param topicName the Kafka topic name
+     * @return Properties object with Kafka consumer configuration
      */
     public Properties buildKafkaPropertiesForTopic(String topicName)
     {
@@ -53,24 +62,23 @@ public class KafkaConfig
         {
             for (String key : source.getPropertyNames())
             {
-                // 1. Bootstrap - Server
+                // Add global Kafka properties (e.g., bootstrap.servers)
                 if (key.startsWith("bootstrap.servers"))
                 {
                     props.put(key, config.getValue(key, String.class));
                 }
 
-                // 2. Incoming topic-specific props
+                // Add topic-specific properties
                 if (key.startsWith(topicPrefix))
                 {
                     props.put(key.substring(topicPrefix.length()), config.getValue(key, String.class));
                 }
 
-                // 3. CICS transaction map properties
+                // Build CICS transaction mapping
                 if (key.startsWith(cicsPrefix))
                 {
                     topicTranMap.put(key.substring(cicsPrefix.length()), config.getValue(key, String.class));
                 }
-
             }
         }
 
@@ -79,11 +87,10 @@ public class KafkaConfig
 
 
     /**
-     * Get transaction ID for a given topic.
-     * 
-     * @param topic
-     *            the Kafka topic
-     * @return transaction ID, defaults to "CJSU" if not configured
+     * Returns the CICS transaction ID for a given topic.
+     *
+     * @param topic the Kafka topic name
+     * @return CICS transaction ID, defaults to "CJSU" if not configured
      */
     public String getTranIdForTopic(String topic)
     {
