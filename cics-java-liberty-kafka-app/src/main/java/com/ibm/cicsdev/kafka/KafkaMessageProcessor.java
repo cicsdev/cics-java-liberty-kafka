@@ -7,7 +7,7 @@
 /* US Government Users Restricted Rights - Use, duplication or        */
 /* disclosure restricted by GSA ADP Schedule Contract with IBM Corp   */
 /*                                                                    */
-package com.example.kafkaliberty;
+package com.ibm.cicsdev.kafka;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;

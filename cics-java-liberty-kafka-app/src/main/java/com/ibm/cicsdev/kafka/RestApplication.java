@@ -7,7 +7,7 @@
 /* US Government Users Restricted Rights - Use, duplication or        */
 /* disclosure restricted by GSA ADP Schedule Contract with IBM Corp   */
 /*                                                                    */
-package com.example.kafkaliberty;
+package com.ibm.cicsdev.kafka;
 
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.core.Application;
