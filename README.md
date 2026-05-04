@@ -423,8 +423,8 @@ cicsts:security will get automatically added if SEC=YES in SIT
 
 ### 3. Build Configuration (Optional)
 **Files:**
-- `cics-java-liberty-kafka-bundle/build.gradle`
-- `cics-java-liberty-kafka-bundle/pom.xml`
+- `cics-java-liberty-kafka-cicsbundle/build.gradle`
+- `cics-java-liberty-kafka-cicsbundle/pom.xml`
 
 **When is this needed?**
 Only if using **CICS Bundle Deployment** with Gradle or Maven. This tells the CICS bundle plugins which Liberty JVM server will run your application.
@@ -518,7 +518,7 @@ cics-java-liberty-kafka/
 │       └── webapp/WEB-INF/
 │           └── beans.xml                        # CDI configuration
 │
-├── cics-java-liberty-kafka-bundle/              # CICS bundle (Gradle/Maven)
+├── cics-java-liberty-kafka-cicsbundle/              # CICS bundle (Gradle/Maven)
 │   ├── build.gradle                             # Bundle Gradle build
 │   ├── pom.xml                                  # Bundle Maven POM
 │   └── src/main/bundleParts/
@@ -528,7 +528,7 @@ cics-java-liberty-kafka/
 │   ├── config/liberty/
 │   │   └── server.xml                           # Liberty server template
 │   └── config/cicsbundle/
-│       └── cics-java-liberty-kafka-bundle-1.0.0/
+│       └── cics-java-liberty-kafka-cicsbundle-1.0.0/
 │           └── ...                              # CICS Explorer bundle project
 │
 └── gradle/ & .mvn/                              # Wrapper support files
@@ -586,7 +586,7 @@ gradlew.bat clean build
 
 **Output:**
 - WAR file: `cics-java-liberty-kafka-app/build/libs/cics-java-liberty-kafka.war`
-- CICS bundle ZIP: `cics-java-liberty-kafka-bundle/build/distributions/cics-java-liberty-kafka-bundle-1.0.0.zip`
+- CICS bundle ZIP: `cics-java-liberty-kafka-cicsbundle/build/distributions/cics-java-liberty-kafka-cicsbundle-1.0.0.zip`
 
 **Note:** In Eclipse, the `build` directory may be hidden. To view it: Package Explorer → ⋮ menu → Filters → Uncheck "Gradle build folder".
 
@@ -608,7 +608,7 @@ mvnw.cmd clean verify
 
 **Output:**
 - WAR file: `cics-java-liberty-kafka-app/target/cics-java-liberty-kafka.war`
-- CICS bundle ZIP: `cics-java-liberty-kafka-bundle/target/cics-java-liberty-kafka-bundle-1.0.0.zip`
+- CICS bundle ZIP: `cics-java-liberty-kafka-cicsbundle/target/cics-java-liberty-kafka-cicsbundle-1.0.0.zip`
 
 ---
 
@@ -636,18 +636,18 @@ If using Eclipse with CICS Explorer:
 2. **Upload to z/OS:**
    ```bash
    # Upload the ZIP file to zFS
-   scp cics-java-liberty-kafka-bundle/build/distributions/cics-java-liberty-kafka-bundle-1.0.0.zip user@zos:/path/to/bundles/
+   scp cics-java-liberty-kafka-cicsbundle/build/distributions/cics-java-liberty-kafka-cicsbundle-1.0.0.zip user@zos:/path/to/bundles/
    ```
 
 3. **Extract on z/OS:**
    ```bash
    cd /path/to/bundles
-   jar xf cics-java-liberty-kafka-bundle-1.0.0.zip
+   jar xf cics-java-liberty-kafka-cicsbundle-1.0.0.zip
    ```
 
 4. **Define and install the bundle in CICS:**
    ```
-   CEDA DEFINE BUNDLE(KAFKBNDL) GROUP(MYGROUP) BUNDLEDIR(/path/to/bundles/cics-java-liberty-kafka-bundle-1.0.0)
+   CEDA DEFINE BUNDLE(KAFKBNDL) GROUP(MYGROUP) BUNDLEDIR(/path/to/bundles/cics-java-liberty-kafka-cicsbundle-1.0.0)
    CEDA INSTALL BUNDLE(KAFKBNDL) GROUP(MYGROUP)
    ```
 
@@ -656,7 +656,7 @@ If using Eclipse with CICS Explorer:
 ### Method 2: CICS Explorer Deployment
 
 1. **Review the CICS bundle project in Eclipse:**
-   - Navigate to `etc/config/cicsbundle/cics-java-liberty-kafka-bundle-1.0.0`
+   - Navigate to `etc/config/cicsbundle/cics-java-liberty-kafka-cicsbundle-1.0.0`
    - Verify the `.warbundle` file references the correct JVM server
 
 2. **Export to zFS:**

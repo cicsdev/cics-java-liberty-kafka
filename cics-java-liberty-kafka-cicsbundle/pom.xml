@@ -16,7 +16,7 @@
     <!-- ================================================================ -->
     <!-- Project Coordinates                                              -->
     <!-- ================================================================ -->
-    <artifactId>cics-java-liberty-kafka-bundle</artifactId>
+    <artifactId>cics-java-liberty-kafka-cicsbundle</artifactId>
     <packaging>cics-bundle</packaging>
     <name>CICS Kafka Jakarta EE - CICS Bundle</name>
 

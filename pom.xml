@@ -67,7 +67,7 @@
     <!-- ================================================================ -->
     <modules>
         <module>cics-java-liberty-kafka-app</module>
-        <module>cics-java-liberty-kafka-bundle</module>
+        <module>cics-java-liberty-kafka-cicsbundle</module>
     </modules>
 
 </project>
