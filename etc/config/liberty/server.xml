@@ -2,14 +2,10 @@
 <server description="CICS Liberty sample configuration">
     <!-- Enable features -->
     <featureManager>
-        <feature>appSecurity-5.0</feature>
-        <feature>cicsts:core-1.0</feature>
         <feature>microprofile-7.0</feature>
         <feature>transportSecurity-1.0</feature>
         <feature>cicsts:security-1.0</feature>
-        <feature>cdi-4.0</feature>
-    	<feature>restfulWS-3.1</feature>
-    	<feature>concurrent-3.0</feature>
+        <feature>concurrent-3.0</feature>
     	<!-- <feature>passwordUtilities-1.0</feature>
     	<feature>zosPasswordEncryptionKey-1.0</feature> -->
     </featureManager>
