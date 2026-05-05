@@ -7,4 +7,4 @@ rootProject.name = 'cics-java-liberty-kafka'
 // Subprojects
 // ============================================================================
 include(':cics-java-liberty-kafka-app')
-include(':cics-java-liberty-kafka-bundle')
+include(':cics-java-liberty-kafka-cicsbundle')
