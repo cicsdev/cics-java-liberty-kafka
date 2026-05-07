@@ -84,3 +84,4 @@ replay_pid*
 *.vsix
 *.vscode
 /bin/
+/.DS_Store

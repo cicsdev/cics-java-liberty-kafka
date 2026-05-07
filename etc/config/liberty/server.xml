@@ -53,6 +53,12 @@
     <cdi enableImplicitBeanArchives="false"/>
     <include id="cics_auto" location="${server.config.dir}/installedApps.xml" onConflict="IGNORE"/>
                
+    <!-- Custom Managed Executor for Kafka Application -->
+    <!-- Prevents thread starvation by limiting concurrent Kafka message processing -->
+    <managedExecutorService jndiName="concurrent/KafkaExecutor" contextServiceRef="DefaultContextService"
+   		maxThreads="10"
+     	coreThreads="5"/>
+
     <safRegistry enableFailover="false" id="saf"/>
     <executor coreThreads="8" id="allowCICSconfigure" maxThreads="50"/>
 </server>
