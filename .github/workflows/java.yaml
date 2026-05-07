@@ -81,7 +81,7 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@bd5760595778326ba7f1441bcf7e88b49de61a25
       with:
-        arguments: bootWar -Pjava_version=${{ matrix.jdk }}
+        arguments: build -Pjava_version=${{ matrix.jdk }}
   
   build-gradlew:
     name: Build Gradle wrapper
