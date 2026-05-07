@@ -32,14 +32,42 @@ import jakarta.inject.Inject;
  * <li>Wraps each message in a CICSTransactionRunnable for CICS transaction context</li>
  * <li>Maps topics to CICS transaction IDs dynamically</li>
  * <li>Ensures messages run on CICS-aware threads</li>
+ * <li>Uses custom executor with thread limits to prevent application starvation</li>
  * </ul>
+ * </p>
+ *
+ * <p>
+ * <b>Thread Pool Management:</b><br>
+ * This class uses a custom ManagedExecutorService (concurrent/KafkaExecutor) instead of
+ * the default executor. This prevents the Kafka application from consuming all available
+ * threads in the Liberty thread pool, which could starve other applications in the same
+ * CICS Liberty JVM server.
+ * </p>
+ *
+ * <p>
+ * The custom executor is configured in server.xml with specific thread limits:
+ * <ul>
+ * <li>maxThreads: Maximum concurrent message processing threads</li>
+ * <li>coreThreads: Minimum threads kept alive</li>
+ * </ul>
+ * This configuration is especially important in CICS environments where TCLASS limits
+ * might cause thread blocking, and prevents deadlock scenarios.
  * </p>
  */
 @ApplicationScoped
 public class KafkaMessageProcessor
 {
 
-    @Resource(lookup = "java:comp/DefaultManagedExecutorService")
+    /**
+     * Custom ManagedExecutorService for processing Kafka messages asynchronously.
+     *
+     * <p>
+     * <b>Alternative:</b> To use the default Liberty executor instead, comment out this line
+     * and uncomment the following:
+     * <pre>
+     * &#64;Resource(lookup = "java:comp/DefaultManagedExecutorService")
+     */
+    @Resource(lookup = "concurrent/KafkaExecutor")
     private ManagedExecutorService executor;
 
     @Inject

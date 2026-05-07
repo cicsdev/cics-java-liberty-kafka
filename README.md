@@ -32,11 +32,15 @@ The sample is intended both as a runnable example and as an educational referenc
 5. [Requirements](#requirements)
 6. [Project Structure](#project-structure)
 7. [Configuration Guide](#configuration-guide)
-8. [Building the Sample](#building-the-sample)
-9. [Deploying to CICS](#deploying-to-cics)
-10. [Running the Sample](#running-the-sample)
-11. [Troubleshooting](#troubleshooting)
-12. [License](#license)
+8. [Thread Pool Management and TCLASS Considerations](#thread-pool-management-and-tclass-considerations)
+9. [Building the Sample](#building-the-sample)
+10. [Deploying to CICS](#deploying-to-cics)
+11. [Running the Sample](#running-the-sample)
+12. [Troubleshooting](#troubleshooting)
+13. [Logging Strategy](#logging-strategy)
+14. [License](#license)
+15. [Additional Resources](#additional-resources)
+16. [Contributing](#contributing)
 
 ---
 
@@ -563,6 +567,120 @@ compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:6.3-2025090515552
 ```
 
 Browse available versions at [Maven Central](https://search.maven.org/search?q=g:com.ibm.cics%20AND%20a:com.ibm.cics.ts.bom).
+
+---
+
+## Thread Pool Management and TCLASS Considerations
+
+### Overview
+
+In CICS Liberty environments with multiple applications sharing a single JVM server, proper thread pool management is critical to prevent application starvation and deadlocks. This section explains the challenges and solutions implemented in this sample.
+
+---
+
+### The Problem: Thread Starvation in Multi-Application Environments
+
+**Architecture Context:**
+- Multiple web applications run inside a single CICS Liberty JVM server
+- Each application may have its own endpoint/virtualhost
+- CICS regions are cloned for scalability/resilience
+- Sysplex distributor load-balances between applications across cloned regions
+
+**The Challenge:**
+
+In traditional CICS, you use **TCLASS** to throttle applications and prevent any one application from consuming too much resource. However, in Liberty, this approach can cause **deadlocks**:
+
+1. **HTTP requests enter Liberty** and are allocated a thread from the shared pool
+2. **Only then** does the CICS interceptor check TCLASS limits
+3. **If TCLASS limit is reached**, the requesting thread is blocked
+4. **The blocked thread is NOT released** back to the thread pool
+5. **Result**: The entire server can deadlock, starving other applications
+
+**Why This Matters:**
+
+- Liberty in CICS has a **maximum thread limit of 256**
+- Application starvation can occur at lower request rates than expected
+- One misbehaving application can impact all applications in the JVM server
+
+---
+
+### The Solution: Custom Managed Executors
+
+This sample implements **custom ManagedExecutorService** with application-specific thread limits to prevent starvation.
+
+#### How It Works
+
+Instead of using Liberty's default executor (shared by all applications), each application defines its own executor with specific concurrency limits:
+
+```xml
+<!-- In server.xml -->
+<managedExecutorService jndiName="concurrent/KafkaExecutor"
+     contextServiceRef="DefaultContextService"
+     maxThreads="10"
+     coreThreads="5"/>
+```
+
+**Benefits:**
+- ✅ Kafka application cannot consume more than 10 threads
+- ✅ Other applications in the same JVM server are protected
+- ✅ Prevents deadlock scenarios with TCLASS
+- ✅ Provides predictable resource allocation
+
+#### Implementation in Code
+
+The `KafkaMessageProcessor` injects the custom executor:
+
+```java
+@Resource(lookup = "concurrent/KafkaExecutor")
+private ManagedExecutorService executor;
+```
+
+When Kafka messages arrive, they are submitted to this bounded executor:
+
+```java
+executor.submit(new KafkaCICSTransactionRunnable(topic, message));
+```
+
+If the executor's queue is full, new submissions will block or be rejected (depending on policy), preventing unbounded thread consumption.
+
+---
+
+### Configuration Guidelines
+
+#### Determining Thread Limits
+
+Consider these factors when setting `maxThreads`:
+
+1. **Expected Message Rate**: How many messages per second?
+2. **Processing Time**: How long does each message take to process?
+3. **Other Applications**: How many other apps share this JVM server?
+4. **Total Thread Budget**: CICS Liberty max is 256 threads
+
+#### Recommended Configuration
+
+**For Low-Volume Applications (< 100 msg/sec):**
+```xml
+<managedExecutorService jndiName="concurrent/KafkaExecutor"
+     contextServiceRef="DefaultContextService"
+     maxThreads="10"
+     coreThreads="3"/>
+```
+
+**For Medium-Volume Applications (100-500 msg/sec):**
+```xml
+<managedExecutorService jndiName="concurrent/KafkaExecutor"
+     contextServiceRef="DefaultContextService"
+     maxThreads="20"
+     coreThreads="5"/>
+```
+
+**For High-Volume Applications (> 500 msg/sec):**
+```xml
+<managedExecutorService jndiName="concurrent/KafkaExecutor"
+     contextServiceRef="DefaultContextService"
+     maxThreads="40"
+     coreThreads="10"/>
+```
 
 ---
 
