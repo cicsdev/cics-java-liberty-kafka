@@ -28,6 +28,11 @@ java {
     targetCompatibility = JavaVersion.toVersion(javaVersion)
 }
 
+// Two versions of the WAR would be built, one for embedding into servers like Liberty (plain)
+// and a bootWAR which can run standalone and contains all the Tomcat and Spring Boot stuff 
+// we don't need bootWAR, so disable it.
+bootWar { enabled = false }
+
 // ============================================================================
 // Eclipse IDE Configuration
 // ============================================================================
