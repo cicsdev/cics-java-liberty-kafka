@@ -1,5 +1,6 @@
 # cics-java-liberty-kafka
 
+[![Build](https://github.com/cicsdev/cics-java-liberty-kafka/actions/workflows/build.yaml/badge.svg)](https://github.com/cicsdev/cics-java-liberty-kafka/actions/workflows/build.yaml)
 [![License](https://img.shields.io/badge/License-EPL%202.0-green.svg)](https://opensource.org/licenses/EPL-2.0)
 
 ## Overview
