@@ -35,7 +35,7 @@ The sample is intended both as a runnable example and as an educational referenc
 7. [Configuration Guide](#configuration-guide)
 8. [Thread Pool Management and TCLASS Considerations](#thread-pool-management-and-tclass-considerations)
 9. [Building the Sample](#building-the-sample)
-10. [Deploying to CICS](#deploying-to-cics)
+10. [Deploying to a CICS Liberty JVM server](#deploying-to-a-cics-liberty-jvm-server)
 11. [Running the Sample](#running-the-sample)
 12. [Troubleshooting](#troubleshooting)
 13. [Logging Strategy](#logging-strategy)
