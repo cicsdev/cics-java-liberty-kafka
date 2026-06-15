@@ -746,9 +746,9 @@ If using Eclipse with CICS Explorer:
 
 ---
 
-## Deploying to CICS
+## Deploying to a CICS Liberty JVM server
 
-### Method 1: CICS Bundle Deployment (Gradle/Maven)
+### Method 1:  CICS Bundle Plugin Deployment (Gradle/Maven)
 
 1. **Build the bundle** (see [Building the Sample](#building-the-sample))
 
@@ -772,14 +772,14 @@ If using Eclipse with CICS Explorer:
 
 ---
 
-### Method 2: CICS Explorer Deployment
+### Method 2: CICS Explorer SDK Deployment
 
-1. **Review the CICS bundle project in Eclipse:**
+1. **Review the CICS Bundle Project in Eclipse:**
    - Navigate to `etc/config/cicsbundle/cics-java-liberty-kafka-cicsbundle-1.0.0`
    - Verify the `.warbundle` file references the correct JVM server
 
 2. **Export to zFS:**
-   - Right-click the bundle project
+   - Right-click the Bundle Project
    - Select **Export Bundle Project to z/OS UNIX File System**
    - Follow the wizard to specify connection details and target directory
 
