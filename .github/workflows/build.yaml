@@ -44,6 +44,12 @@ jobs:
           cache: maven
       - name: Build with Maven
         run: mvn --batch-mode --update-snapshots --file pom.xml -Djava.version=${{ matrix.jdk }} verify
+      - name: Upload WAR artifact
+        if: matrix.jdk == 17
+        uses: actions/upload-artifact@v4
+        with:
+          name: cics-java-liberty-kafka-war
+          path: cics-java-liberty-kafka-app/target/cics-java-liberty-kafka.war
 
   build-mvnw:
     name: Build Maven Wrapper
@@ -100,3 +106,15 @@ jobs:
         distribution: 'semeru'
     - name: Build with Gradle Wrapper
       run: ./gradlew clean build -Pjava_version=${{ matrix.jdk }}
+
+  publish-war:
+    name: Publish WAR to artifactory
+    runs-on: ubuntu-latest
+    needs: [build-maven]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cicsdev/.github/.github/actions/samples-push-artifactory@e5d2f49bd2a182956086afc4f7b7f94808cd8810
+        with: 
+          artifactory-repository: 'Kafka'
+          github-artifact-name: 'cics-java-liberty-kafka-war'
+          artifactory-artifact-name: 'cics-java-liberty-kafka.war'
