@@ -109,12 +109,10 @@ jobs:
 
   publish-war:
     name: Publish WAR to artifactory
-    runs-on: ubuntu-latest
     needs: [build-maven]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: cicsdev/.github/.github/actions/samples-push-artifactory@e5d2f49bd2a182956086afc4f7b7f94808cd8810
-        with: 
-          artifactory-repository: 'Kafka'
-          github-artifact-name: 'cics-java-liberty-kafka-war'
-          artifactory-artifact-name: 'cics-java-liberty-kafka.war'
+    uses: cicsdev/.github/.github/workflows/push-artifactory.yml@79d17c35108e19adfe334a3e5468cc324bd88f5f
+    with:
+      artifactory-repository: 'Kafka'
+      github-artifact-name: 'cics-java-liberty-kafka-war'
+      artifactory-artifact-name: 'cics-java-liberty-kafka.war'
+    secrets: inherit
