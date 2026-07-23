@@ -1,71 +1,55 @@
-// ============================================================================
-// Plugins
-// ============================================================================
 plugins {
     id 'java'
     id 'eclipse'
     id 'war'
 }
 
-// ============================================================================
-// Project Information
-// ============================================================================
 group = 'com.ibm.cicsdev'
 version = '1.0.0'
 
-// ============================================================================
-// WAR Configuration
-// ============================================================================
 war {
     archiveFileName = 'cics-java-liberty-kafka.war'
 }
 
-// ============================================================================
-// Java Configuration
-// ============================================================================
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(javaVersion)
+        languageVersion = JavaLanguageVersion.of(java_version)
     }
 }
 
-// ============================================================================
-// Eclipse IDE Configuration
-// ============================================================================
-eclipse {
-    classpath {
-        downloadJavadoc = true
+// Ensures Gradle Refresh sets the WTP context-root and web facet version correctly.
+eclipse
+{
+    classpath { downloadJavadoc = true }
+    wtp
+    {
+        facet { facet name: 'jst.web', version: '6.0' }
+        component { contextPath = 'cics-java-liberty-kafka' }
     }
 }
 
-// ============================================================================
-// Repositories
-// ============================================================================
 repositories {
     mavenCentral()
 }
 
-// ============================================================================
-// Dependencies
-// ============================================================================
 dependencies {
-    // CICS TS Bill of Materials
+    // CICS TS BOM
     compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:${cicsBomVersion}")
 
     // Jakarta EE APIs
     compileOnly("jakarta.platform:jakarta.jakartaee-api:${jakartaVersion}")
 
-    // Liberty Developer APIs (WSSubject, WSCallbackHandler, AuthData)
+    // Eclipse MicroProfile
+    compileOnly("org.eclipse.microprofile:microprofile:${microprofileVersion}")
+
+    // Liberty developer APIs (WSSubject, WSCallbackHandler, AuthData)
     compileOnly("net.wasdev.maven.tools.targets:liberty-apis:${libertyApisVersion}")
 
     // JCICS APIs (version managed by BOM)
     compileOnly('com.ibm.cics:com.ibm.cics.server')
 
-    // Eclipse MicroProfile
-    compileOnly("org.eclipse.microprofile:microprofile:${microprofileVersion}")
-
-    // Apache Kafka Client
-	// The kafka-clients library depends on slf4j-api. 
-	// Liberty supplies the logging implementation at runtime, so no additional SLF4J jars are needed.
-	implementation "org.apache.kafka:kafka-clients:${kafkaVersion}"
+    // Apache Kafka client
+    // The kafka-clients library depends on slf4j-api.
+    // Liberty supplies the logging implementation at runtime, so no additional SLF4J jars are needed.
+    implementation "org.apache.kafka:kafka-clients:${kafkaVersion}"
 }
