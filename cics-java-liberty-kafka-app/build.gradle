@@ -34,7 +34,7 @@ repositories {
 
 dependencies {
     // CICS TS BOM
-    compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:${cicsBomVersion}")
+    compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:${project.property('cics.bom.version')}")
 
     // Jakarta EE APIs
     compileOnly("jakarta.platform:jakarta.jakartaee-api:${jakartaVersion}")
