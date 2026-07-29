@@ -48,6 +48,7 @@ The sample is intended both as a runnable example and as an educational referenc
 ## Prerequisites
 
 - CICS TS V6.1 or later with a configured Liberty JVM server
+- APAR PH70996 must be applied to the CICS region
 - Java SE 17 or later on the workstation
 - Eclipse with the IBM CICS SDK for Java EE, Jakarta EE and Liberty (optional)
 - Gradle or Apache Maven on the workstation (optional — wrappers are supplied)
