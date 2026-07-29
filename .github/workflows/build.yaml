@@ -13,7 +13,6 @@ jobs:
   check-copyright:
     runs-on: ubuntu-latest
     name: Check Copyright
-    if: ${{ !startsWith(github.head_ref, 'create-pull-request/') }}
     permissions:
       contents: write        # needed to push the copyright fix commit
       pull-requests: write   # needed to open the fix PR
