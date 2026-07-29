@@ -69,8 +69,8 @@ import jakarta.ws.rs.core.Response;
  */
 @ApplicationScoped
 @Path("/control") // Base path for REST API: /control/*
-@DeclareRoles({ "cics-user" }) // Declares security roles recognized by Liberty
-@RolesAllowed("cics-user") // Restricts access to authenticated users in "cics-user" role
+@DeclareRoles({ "cicsAllAuthenticated" }) // Declares security roles recognized by Liberty
+@RolesAllowed("cicsAllAuthenticated") // Restricts access to authenticated users in "cicsAllAuthenticated" role
 public class KafkaController
 {
     private static final Logger LOG = Logger.getLogger(KafkaController.class.getName());

@@ -30,10 +30,12 @@
     
     <applicationMonitor dropins="dropins" dropinsEnabled="false" pollingRate="5s" updateTrigger="disabled"/>
         
-    <application location="${server.config.dir}/apps/cics-java-liberty-kafka.war" type="war">
+    <application id="cics-java-liberty-kafka"
+        location="${server.config.dir}/apps/cics-java-liberty-kafka.war"
+        name="cics-java-liberty-kafka" type="war">
         <classloader apiTypeVisibility="spec, ibm-api, stable, third-party"/>
         <application-bnd>
-            <security-role name="cics-user">
+            <security-role name="cicsAllAuthenticated">
                 <special-subject type="ALL_AUTHENTICATED_USERS"/>
             </security-role>
         </application-bnd>

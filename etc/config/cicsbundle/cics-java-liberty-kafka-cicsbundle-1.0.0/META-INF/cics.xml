@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<manifest xmlns="http://www.ibm.com/xmlns/prod/cics/bundle" bundleMajorVer="1" bundleMicroVer="0" bundleMinorVer="0" bundleRelease="0" bundleVersion="1" id="cics-java-liberty-kafka-cicsbundle">
-  <meta_directives>
-    <timestamp>2026-05-04T06:06:35.255031Z</timestamp>
-  </meta_directives>
-  <define name="KAFK" path="KAFK.transaction" type="http://www.ibm.com/xmlns/prod/cics/bundle/TRANSACTION"/>
-  <define name="cics-java-liberty-kafka" path="cics-java-liberty-kafka.warbundle" type="http://www.ibm.com/xmlns/prod/cics/bundle/WARBUNDLE"/>
-</manifest>

@@ -26,7 +26,7 @@ buildNumber.properties
 # Ignore Gradle GUI config
 gradle-app.setting
 
-# Avoid ignoring Gradle wrapper jar file (.jar files are usually ignored)
+# Never ignore the Gradle wrapper jar (needed for wrapper to function)
 !gradle-wrapper.jar
 
 # Avoid ignore Gradle wrappper properties
@@ -83,5 +83,5 @@ replay_pid*
 # Built Visual Studio Code Extensions
 *.vsix
 *.vscode
-/bin/
-/.DS_Store
+bin/
+.DS_Store
