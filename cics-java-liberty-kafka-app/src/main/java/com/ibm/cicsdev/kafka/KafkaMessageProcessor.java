@@ -102,14 +102,12 @@ public class KafkaMessageProcessor
     {
         private final String kafkaMessage;
         private final String topic;
-        private final String tranId;
 
 
         public KafkaCICSTransactionRunnable(String topic, String kafkaMessage)
         {
             this.kafkaMessage = kafkaMessage;
             this.topic = topic;
-            this.tranId = config.getTranIdForTopic(topic);
         }
 
 
@@ -157,7 +155,7 @@ public class KafkaMessageProcessor
         @Override
         public String getTranid()
         {
-            return tranId;
+            return config.getTranIdForTopic(topic);
         }
     }
 }
