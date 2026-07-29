@@ -311,8 +311,7 @@ public class KafkaConsumerService
             }
         }
 
-        // processor is a CDI proxy; this resolves correctly because the
-        // ManagedThreadFactory-created thread carries propagated CDI context.
+        // Submit message to async processor
         processor.processAsynchronous(topic, message);
     }
 
