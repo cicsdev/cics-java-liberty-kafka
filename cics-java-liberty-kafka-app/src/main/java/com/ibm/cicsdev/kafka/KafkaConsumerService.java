@@ -270,7 +270,7 @@ public class KafkaConsumerService
      * <ol>
      * <li>Retrieves the Subject for this topic from the pre-captured map</li>
      * <li>Sets RunAs Subject on the consumer task's thread</li>
-     * <li>Delegates message processing to the injected KafkaMessageProcessor</li>
+     * <li>Delegates message processing to KafkaMessageProcessor</li>
      * </ol>
      * </p>
      *
