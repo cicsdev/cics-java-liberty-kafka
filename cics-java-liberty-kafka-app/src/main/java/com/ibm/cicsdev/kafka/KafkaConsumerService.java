@@ -27,6 +27,8 @@ import org.apache.kafka.common.errors.WakeupException;
 import com.ibm.websphere.security.WSSecurityException;
 import com.ibm.websphere.security.auth.WSSubject;
 
+import jakarta.annotation.Resource;
+import jakarta.enterprise.concurrent.ManagedThreadFactory;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -40,6 +42,9 @@ import jakarta.inject.Inject;
  * <li>Dynamic start/stop of consumers per topic</li>
  * <li>Sets Liberty RunAs Subject to ensure proper CICS transaction identity</li>
  * <li>Handles incoming messages asynchronously via KafkaMessageProcessor</li>
+ * <li>Runs consumer loops on a container-managed thread (via ManagedThreadFactory)
+ *     so CDI, JNDI, and classloader context propagate correctly to the
+ *     background thread</li>
  * </ul>
  * </p>
  */
@@ -55,6 +60,15 @@ public class KafkaConsumerService
     @Inject
     KafkaMessageProcessor processor;
 
+    /**
+     * Container-managed thread factory. Unlike a ManagedExecutorService,
+     * this creates a dedicated, non-pooled Thread per call — appropriate
+     * here because each Kafka consumer loop is long-running (lives for as
+     * long as the topic is active).
+     */
+    @Resource
+    ManagedThreadFactory threadFactory;
+
     private static final Logger LOG = Logger.getLogger(KafkaConsumerService.class.getName());
 
     // Guard: one-time RunAs initialisation per consumer thread
@@ -66,6 +80,9 @@ public class KafkaConsumerService
 
     /** Topic → KafkaConsumer */
     private final Map<String, KafkaConsumer<String, String>> consumerMap = new ConcurrentHashMap<>();
+    
+    /** Topic → consumer loop Thread, so stop() can join() it before returning */
+    private final Map<String, Thread> consumerThreads = new ConcurrentHashMap<>();
 
 
     /**
@@ -73,13 +90,13 @@ public class KafkaConsumerService
      *
      * <p>
      * Uses AtomicBoolean and ConcurrentHashMap to prevent duplicate consumers for the same topic.
-     * Multiple topics can run concurrently, each on its own thread.
+     * Multiple topics can run concurrently, each on its own container-managed thread.
      * </p>
      *
      * <p>
      * <b>Security Context:</b><br>
      * The provided Subject is stored and used by handleMessage() to establish RunAs identity
-     * on the consumer thread before processing messages.
+     * on the consumer task before processing messages.
      * </p>
      *
      * @param topic the Kafka topic to listen on
@@ -97,15 +114,17 @@ public class KafkaConsumerService
             return;
         }
 
-        // Create and start a new consumer thread for this topic
-        Thread t = new Thread(() ->
+        // These proxy calls happen on the calling thread,
+        // where CDI context is guaranteed active.
+        final Map<String, Subject> activeTopics = control.getActiveTopics();
+        final Properties props = config.buildKafkaPropertiesForTopic(topic);
+
+        // Create the consumer loop's thread via the container's ManagedThreadFactory.
+        Thread t = threadFactory.newThread(() ->
         {
             KafkaConsumer<String, String> consumer = null;
             try
             {
-                // Build Kafka consumer properties from Config
-                Properties props = config.buildKafkaPropertiesForTopic(topic);
-
                 if (props.isEmpty())
                 {
                     LOG.warning("No Kafka properties found for topic: " + topic);
@@ -132,7 +151,7 @@ public class KafkaConsumerService
                     {
                         try
                         {
-                            handleMessage(topic, r.value());
+                            handleMessage(topic, r.value(), activeTopics);
                         }
                         catch (Exception ex)
                         {
@@ -170,10 +189,12 @@ public class KafkaConsumerService
                 // Remove topic from active maps
                 runningTopics.remove(topic);
                 consumerMap.remove(topic);
+                consumerThreads.remove(topic);
 
                 LOG.info("Consumer closed for topic: " + topic);
             }
         });
+        consumerThreads.put(topic, t);
         t.start();
     }
 
@@ -182,8 +203,8 @@ public class KafkaConsumerService
      * Stops consumption for a given topic.
      *
      * <p>
-     * This method signals the consumer thread to stop polling. The consumer will finish processing
-     * the current batch before the thread exits.
+     * This method signals the consumer task to stop polling. The consumer will finish processing
+     * the current batch before the task exits.
      * </p>
      *
      * @param topic Kafka topic to stop
@@ -216,6 +237,28 @@ public class KafkaConsumerService
                 LOG.warning("Error during consumer wakeup: " + ignored.getMessage());
             }
         }
+        
+        // Block until the consumer thread has actually finished (including its
+        // finally-block cleanup) so a fast subsequent start() for this topic
+        // doesn't race against a not-yet-removed runningTopics/consumerMap entry.
+        Thread consumerThread = consumerThreads.get(topic);
+        if (consumerThread != null)
+        {
+            try
+            {
+                consumerThread.join(5000);
+                if (consumerThread.isAlive())
+                {
+                    LOG.warning("Consumer thread for topic '" + topic + "' did not exit within "
+                        + 5000 + "ms; a subsequent start() may still race.");
+                }
+            }
+            catch (InterruptedException ie)
+            {
+                Thread.currentThread().interrupt();
+                LOG.warning("Interrupted while waiting for consumer thread to stop for topic: " + topic);
+            }
+        }
     }
 
 
@@ -225,19 +268,20 @@ public class KafkaConsumerService
      * <p>
      * <b>Process Flow:</b>
      * <ol>
-     * <li>Retrieves the Subject for this topic from the controller</li>
-     * <li>Sets RunAs Subject on the consumer thread</li>
-     * <li>Delegates message processing to KafkaMessageProcessor</li>
+     * <li>Retrieves the Subject for this topic from the pre-captured map</li>
+     * <li>Sets RunAs Subject on the consumer task's thread</li>
+     * <li>Delegates message processing to the injected KafkaMessageProcessor</li>
      * </ol>
      * </p>
      *
      * @param topic Kafka topic name
      * @param message Kafka message payload
+     * @param activeTopics pre-captured map of active topics to Subjects
      */
-    void handleMessage(String topic, String message)
+    void handleMessage(String topic, String message, Map<String, Subject> activeTopics)
     {
-        // Retrieve the Subject associated with this topic
-        Subject subject = control.getActiveTopics().get(topic);
+        // Use the pre-captured map
+        Subject subject = activeTopics.get(topic);
 
         if (subject == null)
         {
@@ -246,19 +290,19 @@ public class KafkaConsumerService
             return;
         }
 
-        // Set RunAs Subject once per consumer thread
+        // Set RunAs Subject once per consumer task/thread
         if (!runAsInitialized.get())
         {
             try
             {
-                // Save previous RunAs Subject for restoration on thread exit
+                // Save previous RunAs Subject for restoration on task exit
                 Subject prev = WSSubject.getRunAsSubject();
                 previousRunAs.set(prev);
 
                 WSSubject.setRunAsSubject(subject);
                 runAsInitialized.set(true);
 
-                LOG.fine(() -> "RunAs set for topic '" + topic + "' on consumer thread.");
+                LOG.fine(() -> "RunAs set for topic '" + topic + "' on consumer task.");
             }
             catch (WSSecurityException e)
             {
@@ -267,7 +311,8 @@ public class KafkaConsumerService
             }
         }
 
-        // Submit message to async processor
+        // processor is a CDI proxy; this resolves correctly because the
+        // ManagedThreadFactory-created thread carries propagated CDI context.
         processor.processAsynchronous(topic, message);
     }
 

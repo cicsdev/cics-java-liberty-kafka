@@ -16,6 +16,7 @@ import java.util.Properties;
 import org.eclipse.microprofile.config.Config;
 import org.eclipse.microprofile.config.spi.ConfigSource;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 
@@ -33,7 +34,7 @@ import jakarta.inject.Inject;
 public class KafkaConfig
 {
 
-    // Map of topic -> CICS transaction ID
+    // Map of topic -> CICS transaction ID — populated once at startup via @PostConstruct
     private final Map<String, String> topicTranMap = new HashMap<>();
 
     @Inject
@@ -41,11 +42,31 @@ public class KafkaConfig
 
 
     /**
+     * Populate the topic → CICS transaction ID map once at bean initialisation.
+     */
+    @PostConstruct
+    void init()
+    {
+        String cicsPrefix = "cics.transaction.map.";
+        for (ConfigSource source : config.getConfigSources())
+        {
+            for (String key : source.getPropertyNames())
+            {
+                if (key.startsWith(cicsPrefix))
+                {
+                    topicTranMap.put(key.substring(cicsPrefix.length()), config.getValue(key, String.class));
+                }
+            }
+        }
+    }
+
+
+    /**
      * Builds Kafka consumer properties for a given topic using MicroProfile Config.
      *
      * <p>
      * This method reads configuration from microprofile-config.properties and constructs
-     * a Properties object suitable for creating a KafkaConsumer. 
+     * a Properties object suitable for creating a KafkaConsumer.
      *
      * @param topicName the Kafka topic name
      * @return Properties object with Kafka consumer configuration
@@ -55,7 +76,6 @@ public class KafkaConfig
         Properties props = new Properties();
 
         String topicPrefix = topicName + ".";
-        String cicsPrefix = "cics.transaction.map.";
 
         // Iterate over all config sources
         for (ConfigSource source : config.getConfigSources())
@@ -72,12 +92,6 @@ public class KafkaConfig
                 if (key.startsWith(topicPrefix))
                 {
                     props.put(key.substring(topicPrefix.length()), config.getValue(key, String.class));
-                }
-
-                // Build CICS transaction mapping
-                if (key.startsWith(cicsPrefix))
-                {
-                    topicTranMap.put(key.substring(cicsPrefix.length()), config.getValue(key, String.class));
                 }
             }
         }
@@ -97,5 +111,3 @@ public class KafkaConfig
         return topicTranMap.getOrDefault(topic, "CJSU");
     }
 }
-
-// Made with Bob
