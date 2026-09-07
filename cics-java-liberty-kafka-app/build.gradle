@@ -1,4 +1,5 @@
-plugins {
+plugins
+{
     id 'java'
     id 'eclipse'
     id 'war'
@@ -7,12 +8,15 @@ plugins {
 group = 'com.ibm.cicsdev'
 version = '1.0.0'
 
-war {
+war
+{
     archiveFileName = 'cics-java-liberty-kafka.war'
 }
 
-java {
-    toolchain {
+java
+{
+    toolchain
+    {
         languageVersion = JavaLanguageVersion.of(java_version)
     }
 }
@@ -20,19 +24,30 @@ java {
 // Ensures Gradle Refresh sets the WTP context-root and web facet version correctly.
 eclipse
 {
-    classpath { downloadJavadoc = true }
+    classpath
+    {
+        downloadJavadoc = true
+    }
     wtp
     {
-        facet { facet name: 'jst.web', version: '6.0' }
-        component { contextPath = 'cics-java-liberty-kafka' }
+        facet
+        {
+            facet name: 'jst.web', version: '6.0'
+        }
+        component
+        {
+            contextPath = 'cics-java-liberty-kafka'
+        }
     }
 }
 
-repositories {
+repositories
+{
     mavenCentral()
 }
 
-dependencies {
+dependencies
+{
     // CICS TS BOM
     compileOnly enforcedPlatform("com.ibm.cics:com.ibm.cics.ts.bom:${project.property('cics.bom.version')}")
 
